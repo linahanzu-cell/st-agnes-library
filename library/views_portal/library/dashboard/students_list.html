@@ -1,0 +1,145 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h2 style="color: #1f2937;">STUDENT REGISTRY</h2>
+    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px dashed #991b1b; display: flex; align-items: center; gap: 15px;">
+        <form method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+            {% csrf_token %}
+            <span style="font-size: 12px; font-weight: bold; color: #991b1b;">EXCEL IMPORT:</span>
+            <input type="file" name="excel_file" accept=".xlsx,.xls" style="font-size: 11px;">
+            <button type="submit" style="background: #111827; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">UPLOAD LIST</button>
+        </form>
+    </div>
+</div>
+
+<div style="background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+    <h3 style="margin: 0 0 15px 0; color: #991b1b; font-size: 14px;">+ ADD NEW STUDENT</h3>
+    <form method="post" action="{% url 'students_list' %}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+        {% csrf_token %}
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">FIRST NAME</label>
+            <input type="text" name="first_name" required placeholder="e.g. Grace"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">LAST NAME</label>
+            <input type="text" name="last_name" required placeholder="e.g. Linah"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">ADM NUMBER</label>
+            <input type="text" name="admission_number" required placeholder="e.g. 202243"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">GRADE</label>
+            <select name="grade" required style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 100px;">
+                <option value="">--</option>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">STREAM</label>
+            <select name="stream" required style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 90px;">
+                <option value="">--</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+            </select>
+        </div>
+
+        <button type="submit"
+            style="background: #991b1b; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; height: 38px; margin-top: 18px;">
+            <i class="fas fa-plus"></i> ADD STUDENT
+        </button>
+    </form>
+</div>
+
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 15px; color: #4b5563;">FIRST NAME</th>
+                <th style="color: #4b5563;">LAST NAME</th>
+                <th style="color: #4b5563;">ADM-NO</th>
+                <th style="color: #4b5563;">GRADE</th>
+                <th style="color: #4b5563;">STREAM</th>
+                <th style="color: #4b5563;">STATUS</th>
+                <th style="text-align: center; color: #4b5563;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 15px; font-weight: 600;">{{ student.first_name }}</td>
+                <td>{{ student.last_name }}</td>
+                <td>{{ student.admission_number }}</td>
+                <td>Grade {{ student.grade }}</td>
+                <td>{{ student.stream }}</td>
+                <td>
+                    <span style="background: {% if student.status == 'Active' %}#dcfce7{% else %}#fee2e2{% endif %};
+                        color: {% if student.status == 'Active' %}#166534{% else %}#991b1b{% endif %};
+                        padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
+                        {{ student.status }}
+                    </span>
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="{% url 'edit_student' student.id %}"
+                        style="color: #0891b2; font-size: 16px; margin-right: 8px; text-decoration: none;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form method="post" action="{% url 'toggle_student_status' student.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" title="Toggle Status"
+                            style="background: transparent; border: none; cursor: pointer; font-size: 13px; font-weight: bold; margin-right: 8px;
+                            color: {% if student.status == 'Active' %}#d97706{% else %}#166534{% endif %};">
+                            {% if student.status == 'Active' %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'delete_student' student.id %}" style="display: inline;"
+                        onsubmit="return confirm('Are you sure you want to delete {{ student.first_name }} {{ student.last_name }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                            style="background: transparent; color: #991b1b; border: none; cursor: pointer; font-size: 16px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="padding: 50px; text-align: center; color: #9ca3af;">
+                    <i class="fas fa-users" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                    Registry empty. Please add a student or upload your Excel file to begin.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

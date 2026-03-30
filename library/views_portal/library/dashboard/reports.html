@@ -1,0 +1,253 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+<div style="margin-bottom: 25px;">
+    <h2 style="color: #991b1b; margin: 0;">ST. AGNES SHIBUYA | LIBRARY REPORTS</h2>
+</div>
+
+<!-- Report Type Tabs -->
+<div style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+    <a href="{% url 'reports' 'available_books' %}"
+        style="padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none;
+        background: {% if report_type == 'available_books' %}#991b1b{% else %}#f3f4f6{% endif %};
+        color: {% if report_type == 'available_books' %}white{% else %}#374151{% endif %};">
+        <i class="fas fa-book"></i> Available Books
+    </a>
+    <a href="{% url 'reports' 'issued_books' %}"
+        style="padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none;
+        background: {% if report_type == 'issued_books' %}#991b1b{% else %}#f3f4f6{% endif %};
+        color: {% if report_type == 'issued_books' %}white{% else %}#374151{% endif %};">
+        <i class="fas fa-hand-holding"></i> Issued Books
+    </a>
+    <a href="{% url 'reports' 'student_report' %}"
+        style="padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none;
+        background: {% if report_type == 'student_report' %}#991b1b{% else %}#f3f4f6{% endif %};
+        color: {% if report_type == 'student_report' %}white{% else %}#374151{% endif %};">
+        <i class="fas fa-user-graduate"></i> Students
+    </a>
+    <a href="{% url 'reports' 'teacher_report' %}"
+        style="padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 13px; text-decoration: none;
+        background: {% if report_type == 'teacher_report' %}#991b1b{% else %}#f3f4f6{% endif %};
+        color: {% if report_type == 'teacher_report' %}white{% else %}#374151{% endif %};">
+        <i class="fas fa-chalkboard-teacher"></i> Teachers
+    </a>
+</div>
+
+<!-- AVAILABLE BOOKS -->
+{% if report_type == 'available_books' %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #991b1b; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            <i class="fas fa-book"></i> Available Books Report
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 12px 15px; color: #4b5563;">BOOK ID</th>
+                <th style="color: #4b5563;">BOOK NAME</th>
+                <th style="color: #4b5563;">AUTHOR</th>
+                <th style="color: #4b5563;">SUBJECT</th>
+                <th style="color: #4b5563;">CATEGORY</th>
+                <th style="color: #4b5563;">GRADE</th>
+                <th style="color: #4b5563;">TOTAL COPIES</th>
+                <th style="color: #4b5563;">AVAILABLE</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in book_data %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; color: #991b1b; font-weight: bold;">{{ item.book.book_id }}</td>
+                <td style="font-weight: 600;">{{ item.book.title }}</td>
+                <td>{{ item.book.author }}</td>
+                <td>{{ item.book.subject }}</td>
+                <td>{{ item.book.category }}</td>
+                <td>Grade {{ item.book.grade }}</td>
+                <td style="text-align: center;">{{ item.book.total_copies }}</td>
+                <td style="text-align: center;">
+                    <span style="background: {% if item.available > 0 %}#dcfce7{% else %}#fee2e2{% endif %};
+                        color: {% if item.available > 0 %}#166534{% else %}#991b1b{% endif %};
+                        padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                        {{ item.available }}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No books in the system yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- ISSUED BOOKS -->
+{% elif report_type == 'issued_books' %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #f59e0b; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            <i class="fas fa-hand-holding"></i> Issued Books Report
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #f59e0b;">
+                <th style="padding: 12px 15px; color: #4b5563;">BOOK NAME</th>
+                <th style="color: #4b5563;">BOOK ID</th>
+                <th style="color: #4b5563;">SUBJECT</th>
+                <th style="color: #4b5563;">BORROWER</th>
+                <th style="color: #4b5563;">TYPE</th>
+                <th style="color: #4b5563;">DATE BORROWED</th>
+                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">{{ loan.book.title }}</td>
+                <td style="color: #991b1b; font-weight: bold;">{{ loan.book.book_id }}</td>
+                <td>{{ loan.book.subject }}</td>
+                <td>
+                    {% if loan.student %}
+                        {{ loan.student.first_name }} {{ loan.student.last_name }}
+                    {% else %}
+                        {{ loan.teacher.first_name }} {{ loan.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="background: {% if loan.student %}#dbeafe{% else %}#f3e8ff{% endif %};
+                        color: {% if loan.student %}#1e40af{% else %}#6b21a8{% endif %};
+                        padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        {% if loan.student %}Student{% else %}Teacher{% endif %}
+                    </span>
+                </td>
+                <td>{{ loan.date_borrowed }}</td>
+                <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>
+                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        Issued
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No books currently issued.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- STUDENT REPORT -->
+{% elif report_type == 'student_report' %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #991b1b; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            <i class="fas fa-user-graduate"></i> Student Borrowing Report
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 12px 15px; color: #4b5563;">STUDENT NAME</th>
+                <th style="color: #4b5563;">ADM NO</th>
+                <th style="color: #4b5563;">GRADE</th>
+                <th style="color: #4b5563;">STREAM</th>
+                <th style="color: #4b5563;">BOOK BORROWED</th>
+                <th style="color: #4b5563;">DATE BORROWED</th>
+                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">FINE (KSH)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {{ loan.student.first_name }} {{ loan.student.last_name }}
+                </td>
+                <td>{{ loan.student.admission_number }}</td>
+                <td>Grade {{ loan.student.grade }}</td>
+                <td>{{ loan.student.stream }}</td>
+                <td>{{ loan.book.title }}</td>
+                <td>{{ loan.date_borrowed }}</td>
+                <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>
+                    {% if loan.calculate_fine > 0 %}
+                        <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                            KSH {{ loan.calculate_fine }}
+                        </span>
+                    {% else %}
+                        <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                            No Fine
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No students have borrowed books yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- TEACHER REPORT -->
+{% elif report_type == 'teacher_report' %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #1f2937; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            <i class="fas fa-chalkboard-teacher"></i> Teacher Borrowing Report
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
+                <th style="padding: 12px 15px; color: #4b5563;">TEACHER NAME</th>
+                <th style="color: #4b5563;">TEACHER ID</th>
+                <th style="color: #4b5563;">EMAIL</th>
+                <th style="color: #4b5563;">PHONE</th>
+                <th style="color: #4b5563;">BOOK BORROWED</th>
+                <th style="color: #4b5563;">DATE BORROWED</th>
+                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {{ loan.teacher.first_name }} {{ loan.teacher.last_name }}
+                </td>
+                <td>{{ loan.teacher.teacher_id }}</td>
+                <td>{{ loan.teacher.email }}</td>
+                <td>{{ loan.teacher.phone_number }}</td>
+                <td>{{ loan.book.title }}</td>
+                <td>{{ loan.date_borrowed }}</td>
+                <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>
+                    <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                        Issued
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No teachers have borrowed books yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

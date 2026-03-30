@@ -1,0 +1,112 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+<h2 style="color: #991b1b; margin-bottom: 25px;">ST. AGNES SHIBUYA | LIBRARY OVERVIEW</h2>
+
+<!-- Main Layout: Left (Finances) + Right (Stats) -->
+<div style="display: flex; gap: 25px; align-items: flex-start;">
+
+    <!-- LEFT SIDE: Finances -->
+    <div style="flex: 1.5; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
+        <div style="background: #065f46; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="color: #a7f3d0; font-size: 11px; text-transform: uppercase; font-weight: bold;">Total Fines</div>
+                <div style="color: white; font-size: 28px; font-weight: 900;">KSH {{ total_finances }}</div>
+            </div>
+            <i class="fas fa-coins" style="font-size: 35px; color: #a7f3d0;"></i>
+        </div>
+        <div style="padding: 20px;">
+            <h4 style="margin: 0 0 15px 0; color: #1f2937; font-size: 13px; text-transform: uppercase;">Students With Overdue Fines</h4>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">STUDENT</th>
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">BOOK</th>
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">BORROWED</th>
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">DUE DATE</th>
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">DAYS OVERDUE</th>
+                        <th style="padding: 10px; text-align: left; color: #4b5563;">FINE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in overdue_loans %}
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 10px; font-weight: 600;">
+                            {{ loan.student.first_name }} {{ loan.student.last_name }}
+                        </td>
+                        <td style="padding: 10px;">{{ loan.book.title }}</td>
+                        <td style="padding: 10px;">{{ loan.date_borrowed }}</td>
+                        <td style="padding: 10px; color: #991b1b;">{{ loan.date_due }}</td>
+                        <td style="padding: 10px; text-align: center;">
+                            <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 12px;">
+                                {{ loan.days_overdue }} days
+                            </span>
+                        </td>
+                        <td style="padding: 10px;">
+                            <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-weight: bold; font-size: 12px;">
+                                KSH {{ loan.calculate_fine }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 30px; text-align: center; color: #9ca3af;">
+                            <i class="fas fa-check-circle" style="font-size: 25px; display: block; margin-bottom: 8px; color: #065f46;"></i>
+                            No overdue fines at the moment!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE: Stats Cards -->
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+
+        <div style="background: #991b1b; color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin: 0 0 5px; font-size: 11px; text-transform: uppercase; opacity: 0.8;">Students</p>
+                <h3 style="font-size: 36px; margin: 0; font-weight: 900;">{{ total_students }}</h3>
+            </div>
+            <i class="fas fa-user-graduate" style="font-size: 35px; opacity: 0.6;"></i>
+        </div>
+
+        <div style="background: #1f2937; color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin: 0 0 5px; font-size: 11px; text-transform: uppercase; opacity: 0.8;">Teachers</p>
+                <h3 style="font-size: 36px; margin: 0; font-weight: 900;">{{ total_teachers }}</h3>
+            </div>
+            <i class="fas fa-chalkboard-teacher" style="font-size: 35px; opacity: 0.6;"></i>
+        </div>
+
+        <div style="background: white; color: #1f2937; border: 2px solid #991b1b; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin: 0 0 5px; font-size: 11px; text-transform: uppercase; color: #6b7280;">Books In Stock</p>
+                <h3 style="font-size: 36px; margin: 0; font-weight: 900; color: #991b1b;">{{ available_books }}</h3>
+            </div>
+            <i class="fas fa-book" style="font-size: 35px; color: #991b1b; opacity: 0.6;"></i>
+        </div>
+
+        <div style="background: #f59e0b; color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p style="margin: 0 0 5px; font-size: 11px; text-transform: uppercase; opacity: 0.8;">Issued Books</p>
+                <h3 style="font-size: 36px; margin: 0; font-weight: 900;">{{ issued_books }}</h3>
+            </div>
+            <i class="fas fa-hand-holding" style="font-size: 35px; opacity: 0.6;"></i>
+        </div>
+
+        <a href="{% url 'reservations_list' %}" style="text-decoration: none;">
+            <div style="background: #1d4ed8; color: white; padding: 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <p style="margin: 0 0 5px; font-size: 11px; text-transform: uppercase; opacity: 0.8;">Pending Reservations</p>
+                    <h3 style="font-size: 36px; margin: 0; font-weight: 900;">{{ pending_reservations }}</h3>
+                </div>
+                <i class="fas fa-bookmark" style="font-size: 35px; opacity: 0.6;"></i>
+            </div>
+        </a>
+
+    </div>
+</div>
+
+{% endblock %}

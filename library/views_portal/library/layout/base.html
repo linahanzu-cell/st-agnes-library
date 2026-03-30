@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>St. Agnes Shibuya | Library Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+.sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; }
+.sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+.nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+.nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
+.nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
+.drop-menu { display: none; background: #0f172a; }
+.show { display: block !important; }
+.main-content { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+.top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; }
+.top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+.top-bar a:hover { color: #991b1b; }
+.content-body { padding: 40px; flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Library Admin</div>
+    </div>
+    <nav>
+        <a href="{% url 'home' %}" class="nav-link">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="{% url 'students_list' %}" class="nav-link">
+            <i class="fas fa-user-graduate"></i> Students
+        </a>
+        <a href="{% url 'teachers_list' %}" class="nav-link">
+            <i class="fas fa-chalkboard-teacher"></i> Teachers
+        </a>
+        <a href="{% url 'books_list' %}" class="nav-link">
+            <i class="fas fa-book"></i> Books
+        </a>
+        <a href="{% url 'loans_list' %}" class="nav-link">
+            <i class="fas fa-exchange-alt"></i> Issue / Return
+        </a>
+        <a href="{% url 'reservations_list' %}" class="nav-link">
+            <i class="fas fa-bookmark"></i> Reservations
+        </a>
+        <div onclick="toggleDrop()" class="nav-link" style="cursor:pointer;">
+            <i class="fas fa-file-alt"></i> Generate Reports
+            <i class="fas fa-chevron-down" style="float:right; font-size: 10px; margin-top: 5px;"></i>
+        </div>
+        <div id="drop" class="drop-menu">
+            <a href="{% url 'reports' 'available_books' %}" class="nav-link" style="padding-left: 55px;">
+                <i class="fas fa-book-open"></i> Available Books
+            </a>
+            <a href="{% url 'reports' 'issued_books' %}" class="nav-link" style="padding-left: 55px;">
+                <i class="fas fa-hand-holding"></i> Issued Books
+            </a>
+            <a href="{% url 'reports' 'student_report' %}" class="nav-link" style="padding-left: 55px;">
+                <i class="fas fa-user-graduate"></i> Student Report
+            </a>
+            <a href="{% url 'reports' 'teacher_report' %}" class="nav-link" style="padding-left: 55px;">
+                <i class="fas fa-chalkboard-teacher"></i> Teacher Report
+            </a>
+        </div>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <a href="{% url 'profile' %}">PROFILE</a>
+        <a href="{% url 'login' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+    <div class="content-body">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script>
+function toggleDrop() {
+    document.getElementById("drop").classList.toggle("show");
+}
+</script>
+
+</body>
+</html>

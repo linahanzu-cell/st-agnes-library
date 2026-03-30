@@ -1,0 +1,46 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <h2 style="color: #991b1b; margin-bottom: 25px;">EDIT LOAN</h2>
+    <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">BORROWER</label>
+                    <input type="text" value="{% if loan.student %}{{ loan.student.first_name }} {{ loan.student.last_name }}{% else %}{{ loan.teacher.first_name }} {{ loan.teacher.last_name }}{% endif %}" disabled
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #f9fafb; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">BOOK</label>
+                    <input type="text" value="{{ loan.book.title }}" disabled
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #f9fafb; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">DATE BORROWED</label>
+                    <input type="text" value="{{ loan.date_borrowed }}" disabled
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #f9fafb; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">DUE DATE</label>
+                    <input type="date" name="date_due" value="{{ loan.date_due }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                        SAVE CHANGES
+                    </button>
+                    <a href="{% url 'loans_list' %}" style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none;">
+                        CANCEL
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

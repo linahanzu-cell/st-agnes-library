@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>St. Agnes Shibuya | Library System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        min-height: 100vh;
+        font-family: 'Segoe UI', sans-serif;
+        background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(10, 15, 30, 0.75);
+        z-index: 0;
+    }
+    .content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 40px 20px;
+        width: 100%;
+        max-width: 1100px;
+    }
+    .school-icon { font-size: 70px; color: #ef4444; margin-bottom: 20px; display: block; text-shadow: 0 4px 15px rgba(239,68,68,0.4); }
+    .school-name { font-size: 52px; font-weight: 900; color: white; letter-spacing: 6px; text-transform: uppercase; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    .school-subtitle { font-size: 13px; color: #9ca3af; text-transform: uppercase; letter-spacing: 4px; margin-top: 10px; margin-bottom: 50px; }
+    .cards-row { display: flex; gap: 25px; justify-content: center; flex-wrap: wrap; }
+    .card { background: white; border-radius: 16px; padding: 40px 35px; width: 300px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); transition: transform 0.3s, box-shadow 0.3s; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 30px 80px rgba(0,0,0,0.4); }
+    .card-icon { font-size: 50px; margin-bottom: 15px; display: block; }
+    .card-title { font-size: 20px; font-weight: 900; color: #1f2937; letter-spacing: 2px; margin-bottom: 12px; }
+    .card-desc { font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 25px; }
+    .login-btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; text-decoration: none; letter-spacing: 1px; transition: opacity 0.3s, transform 0.2s; }
+    .login-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .btn-librarian { background: #991b1b; color: white; }
+    .btn-student { background: #1d4ed8; color: white; }
+    .btn-teacher { background: #065f46; color: white; }
+    .footer { position: relative; z-index: 1; margin-top: 40px; color: #6b7280; font-size: 12px; text-align: center; }
+    .footer span { color: #ef4444; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div class="content">
+    <i class="fas fa-book-open school-icon"></i>
+    <div class="school-name">ST. AGNES</div>
+    <div class="school-subtitle">Shibuya School Library System</div>
+
+    <div class="cards-row">
+
+        <!-- Librarian -->
+        <div class="card">
+            <i class="fas fa-user-shield card-icon" style="color: #991b1b;"></i>
+            <div class="card-title">LIBRARIAN</div>
+            <div class="card-desc">Access the full library management system — manage books, students, teachers and reports</div>
+            <a href="/login/" class="login-btn btn-librarian">
+                <i class="fas fa-sign-in-alt"></i> LOGIN
+            </a>
+        </div>
+
+        <!-- Student -->
+        <div class="card">
+            <i class="fas fa-user-graduate card-icon" style="color: #1d4ed8;"></i>
+            <div class="card-title">STUDENT</div>
+            <div class="card-desc">Browse books, check fines, view due dates and reserve books online</div>
+            <a href="/student/login/" class="login-btn btn-student">
+                <i class="fas fa-sign-in-alt"></i> LOGIN
+            </a>
+        </div>
+
+        <!-- Teacher -->
+        <div class="card">
+            <i class="fas fa-chalkboard-teacher card-icon" style="color: #065f46;"></i>
+            <div class="card-title">TEACHER</div>
+            <div class="card-desc">Browse books, manage your reservations and view borrowing history</div>
+            <a href="/teacher/login/" class="login-btn btn-teacher">
+                <i class="fas fa-sign-in-alt"></i> LOGIN
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<div class="footer">
+    St. Agnes Shibuya School &copy; 2025 &nbsp;|&nbsp; <span>Library Management System</span>
+</div>
+
+</body>
+</html>

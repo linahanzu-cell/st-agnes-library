@@ -1,0 +1,168 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h2 style="color: #991b1b; margin: 0;">ISSUE / RETURN BOOKS</h2>
+    <a href="{% url 'issue_book' %}"
+        style="background: #991b1b; color: white; padding: 10px 20px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 13px;">
+        <i class="fas fa-plus"></i> ISSUE NEW BOOK
+    </a>
+</div>
+
+<!-- Active Loans -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;">
+    <div style="background: #991b1b; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px;">CURRENTLY ISSUED BOOKS</h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 12px 15px; color: #4b5563;">BORROWER</th>
+                <th style="color: #4b5563;">TYPE</th>
+                <th style="color: #4b5563;">BOOK</th>
+                <th style="color: #4b5563;">DATE BORROWED</th>
+                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">FINE</th>
+                <th style="text-align: center; color: #4b5563;">ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in active_loans %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {% if loan.student %}
+                        {{ loan.student.first_name }} {{ loan.student.last_name }}
+                    {% else %}
+                        {{ loan.teacher.first_name }} {{ loan.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="background: {% if loan.student %}#dbeafe{% else %}#f3e8ff{% endif %};
+                        color: {% if loan.student %}#1e40af{% else %}#6b21a8{% endif %};
+                        padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        {% if loan.student %}Student{% else %}Teacher{% endif %}
+                    </span>
+                </td>
+                <td>{{ loan.book.title }}</td>
+                <td>{{ loan.date_borrowed }}</td>
+                <td style="color: #991b1b; font-weight: bold;">{{ loan.date_due }}</td>
+                <td>
+                    {% if loan.student %}
+                        {% if loan.calculate_fine > 0 %}
+                            <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                                KSH {{ loan.calculate_fine }}
+                            </span>
+                        {% else %}
+                            <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                                No Fine
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span style="background: #f3f4f6; color: #6b7280; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                            N/A
+                        </span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="{% url 'edit_loan' loan.id %}"
+                        style="background: #0891b2; color: white; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; text-decoration: none; margin-right: 5px;">
+                        <i class="fas fa-edit"></i> EDIT
+                    </a>
+                    <form method="post" action="{% url 'return_book' loan.id %}" style="display: inline;"
+                        onsubmit="return confirm('Mark this book as returned?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                            style="background: #065f46; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                            <i class="fas fa-undo"></i> RETURN
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No books currently issued.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Recently Returned -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #1f2937; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px;">RECENTLY RETURNED BOOKS</h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
+                <th style="padding: 12px 15px; color: #4b5563;">BORROWER</th>
+                <th style="color: #4b5563;">TYPE</th>
+                <th style="color: #4b5563;">BOOK</th>
+                <th style="color: #4b5563;">DATE BORROWED</th>
+                <th style="color: #4b5563;">DATE RETURNED</th>
+                <th style="color: #4b5563;">FINE PAID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in returned_loans %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {% if loan.student %}
+                        {{ loan.student.first_name }} {{ loan.student.last_name }}
+                    {% else %}
+                        {{ loan.teacher.first_name }} {{ loan.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="background: {% if loan.student %}#dbeafe{% else %}#f3e8ff{% endif %};
+                        color: {% if loan.student %}#1e40af{% else %}#6b21a8{% endif %};
+                        padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        {% if loan.student %}Student{% else %}Teacher{% endif %}
+                    </span>
+                </td>
+                <td>{{ loan.book.title }}</td>
+                <td>{{ loan.date_borrowed }}</td>
+                <td style="color: #065f46; font-weight: bold;">{{ loan.date_returned }}</td>
+                <td>
+                    {% if loan.student %}
+                        {% if loan.calculate_fine > 0 %}
+                            <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                                KSH {{ loan.calculate_fine }}
+                            </span>
+                        {% else %}
+                            <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                                No Fine
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span style="background: #f3f4f6; color: #6b7280; padding: 3px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">
+                            N/A
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No returned books yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

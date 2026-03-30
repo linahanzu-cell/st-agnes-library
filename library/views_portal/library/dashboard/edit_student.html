@@ -1,0 +1,64 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #991b1b; margin-bottom: 25px;">EDIT STUDENT</h2>
+    <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FIRST NAME</label>
+                    <input type="text" name="first_name" value="{{ student.first_name }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">LAST NAME</label>
+                    <input type="text" name="last_name" value="{{ student.last_name }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">ADMISSION NUMBER</label>
+                    <input type="text" name="admission_number" value="{{ student.admission_number }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">GRADE</label>
+                    <select name="grade" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="7" {% if student.grade == "7" %}selected{% endif %}>Grade 7</option>
+                        <option value="8" {% if student.grade == "8" %}selected{% endif %}>Grade 8</option>
+                        <option value="9" {% if student.grade == "9" %}selected{% endif %}>Grade 9</option>
+                        <option value="10" {% if student.grade == "10" %}selected{% endif %}>Grade 10</option>
+                        <option value="11" {% if student.grade == "11" %}selected{% endif %}>Grade 11</option>
+                        <option value="12" {% if student.grade == "12" %}selected{% endif %}>Grade 12</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">STREAM</label>
+                    <select name="stream" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="A" {% if student.stream == "A" %}selected{% endif %}>A</option>
+                        <option value="B" {% if student.stream == "B" %}selected{% endif %}>B</option>
+                        <option value="C" {% if student.stream == "C" %}selected{% endif %}>C</option>
+                        <option value="D" {% if student.stream == "D" %}selected{% endif %}>D</option>
+                        <option value="E" {% if student.stream == "E" %}selected{% endif %}>E</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                        SAVE CHANGES
+                    </button>
+                    <a href="{% url 'students_list' %}" style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none;">
+                        CANCEL
+                    </a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

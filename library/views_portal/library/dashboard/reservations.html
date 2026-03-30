@@ -1,0 +1,174 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<h2 style="color: #991b1b; margin-bottom: 25px;">BOOK RESERVATIONS</h2>
+
+<!-- Pending Reservations -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+    <div style="background: #991b1b; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px;">
+            <i class="fas fa-clock"></i> PENDING RESERVATIONS ({{ pending.count }})
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">PERSON</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">TYPE</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE REQUESTED</th>
+                <th style="padding: 12px 15px; text-align: center; color: #4b5563;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in pending %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {% if res.student %}
+                        {{ res.student.first_name }} {{ res.student.last_name }}
+                    {% else %}
+                        {{ res.teacher.first_name }} {{ res.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">
+                    {% if res.student %}
+                        <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">STUDENT</span>
+                    {% else %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">TEACHER</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">{{ res.book.title }}</td>
+                <td style="padding: 12px 15px;">{{ res.date_reserved|date:"d M Y" }}</td>
+                <td style="padding: 12px 15px; text-align: center;">
+                    <form method="post" action="{% url 'approve_reservation' res.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #065f46; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; margin-right: 5px;">
+                            <i class="fas fa-check"></i> APPROVE
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'reject_reservation' res.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #991b1b; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
+                            <i class="fas fa-times"></i> REJECT
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 30px; text-align: center; color: #9ca3af;">
+                    <i class="fas fa-check-circle" style="font-size: 25px; display: block; margin-bottom: 8px; color: #065f46;"></i>
+                    No pending reservations
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Approved Reservations -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+    <div style="background: #065f46; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px;">
+            <i class="fas fa-check-circle"></i> APPROVED RESERVATIONS ({{ approved.count }})
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #065f46;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">PERSON</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">TYPE</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE REQUESTED</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in approved %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {% if res.student %}
+                        {{ res.student.first_name }} {{ res.student.last_name }}
+                    {% else %}
+                        {{ res.teacher.first_name }} {{ res.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">
+                    {% if res.student %}
+                        <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">STUDENT</span>
+                    {% else %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">TEACHER</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">{{ res.book.title }}</td>
+                <td style="padding: 12px 15px;">{{ res.date_reserved|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 30px; text-align: center; color: #9ca3af;">
+                    No approved reservations
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Rejected Reservations -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: #1f2937; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px;">
+            <i class="fas fa-times-circle"></i> REJECTED RESERVATIONS ({{ rejected.count }})
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">PERSON</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">TYPE</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE REQUESTED</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in rejected %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">
+                    {% if res.student %}
+                        {{ res.student.first_name }} {{ res.student.last_name }}
+                    {% else %}
+                        {{ res.teacher.first_name }} {{ res.teacher.last_name }}
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">
+                    {% if res.student %}
+                        <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">STUDENT</span>
+                    {% else %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">TEACHER</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 15px;">{{ res.book.title }}</td>
+                <td style="padding: 12px 15px;">{{ res.date_reserved|date:"d M Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 30px; text-align: center; color: #9ca3af;">
+                    No rejected reservations
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

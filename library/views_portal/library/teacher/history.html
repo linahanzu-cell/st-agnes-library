@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>St. Agnes | Teacher Borrowing History</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+    .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+    .nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
+    .main-content { margin-left: 260px; flex: 1; padding: 40px; }
+    .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; margin: -40px -40px 40px -40px; }
+    .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Teacher Portal</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+    </div>
+    <nav>
+        <a href="{% url 'teacher_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'teacher_books' %}" class="nav-link"><i class="fas fa-book"></i> Browse Books</a>
+        <a href="{% url 'teacher_history' %}" class="nav-link"><i class="fas fa-history"></i> Borrowing History</a>
+    </nav>
+</div>
+<div class="main-content">
+    <div class="top-bar">
+        <a href="{% url 'teacher_logout' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+    <h2 style="color: #991b1b; margin-bottom: 25px;">BORROWING HISTORY</h2>
+    <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE BORROWED</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DUE DATE</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE RETURNED</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 12px 15px; font-weight: 600;">{{ loan.book.title }}</td>
+                    <td style="padding: 12px 15px;">{{ loan.date_borrowed }}</td>
+                    <td style="padding: 12px 15px; color: #991b1b;">{{ loan.date_due }}</td>
+                    <td style="padding: 12px 15px;">{{ loan.date_returned|default:"Not returned yet" }}</td>
+                    <td style="padding: 12px 15px;">
+                        {% if loan.date_returned %}
+                        <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">RETURNED</span>
+                        {% else %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">ACTIVE</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 40px; text-align: center; color: #9ca3af;">
+                        <i class="fas fa-history" style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
+                        No borrowing history yet
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

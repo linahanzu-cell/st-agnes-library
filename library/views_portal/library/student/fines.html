@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>St. Agnes | My Fines</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+    .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+    .nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
+    .main-content { margin-left: 260px; flex: 1; padding: 40px; }
+    .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; margin: -40px -40px 40px -40px; }
+    .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Student Portal</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ student.first_name }} {{ student.last_name }}</div>
+    </div>
+    <nav>
+        <a href="{% url 'student_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'student_books' %}" class="nav-link"><i class="fas fa-book"></i> Browse Books</a>
+        <a href="{% url 'student_history' %}" class="nav-link"><i class="fas fa-history"></i> Borrowing History</a>
+        <a href="{% url 'student_fines' %}" class="nav-link"><i class="fas fa-exclamation-triangle"></i> My Fines</a>
+    </nav>
+</div>
+<div class="main-content">
+    <div class="top-bar">
+        <a href="{% url 'student_logout' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+    <h2 style="color: #991b1b; margin-bottom: 25px;">MY FINES</h2>
+
+    <!-- Total Fine Card -->
+    <div style="background: {% if total > 0 %}#991b1b{% else %}#065f46{% endif %}; color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Total Outstanding Fines</p>
+            <h3 style="font-size: 36px; font-weight: 900;">KSH {{ total }}</h3>
+        </div>
+        <i class="fas fa-coins" style="font-size: 40px; opacity: 0.6;"></i>
+    </div>
+
+    <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DUE DATE</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DAYS OVERDUE</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">FINE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in fine_data %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 12px 15px; font-weight: 600;">{{ item.loan.book.title }}</td>
+                    <td style="padding: 12px 15px; color: #991b1b;">{{ item.loan.date_due }}</td>
+                    <td style="padding: 12px 15px;">
+                        <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">{{ item.days }} days</span>
+                    </td>
+                    <td style="padding: 12px 15px;">
+                        <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">KSH {{ item.fine }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 40px; text-align: center; color: #9ca3af;">
+                        <i class="fas fa-check-circle" style="font-size: 30px; display: block; margin-bottom: 10px; color: #065f46;"></i>
+                        No fines! Keep returning books on time 😊
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #991b1b; margin-bottom: 25px;">EDIT BOOK</h2>
+    <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">BOOK ID</label>
+                    <input type="text" value="{{ book.book_id }}" disabled
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box; background: #f9fafb; color: #991b1b; font-weight: bold;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">BOOK NAME</label>
+                    <input type="text" name="title" value="{{ book.title }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">AUTHOR</label>
+                    <input type="text" name="author" value="{{ book.author }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SUBJECT</label>
+                    <input type="text" name="subject" value="{{ book.subject }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">CATEGORY</label>
+                    <select name="category" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="Textbook" {% if book.category == "Textbook" %}selected{% endif %}>Textbook</option>
+                        <option value="Novel" {% if book.category == "Novel" %}selected{% endif %}>Novel</option>
+                        <option value="Reference" {% if book.category == "Reference" %}selected{% endif %}>Reference</option>
+                        <option value="Revision" {% if book.category == "Revision" %}selected{% endif %}>Revision</option>
+                        <option value="Other" {% if book.category == "Other" %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PUBLISHER</label>
+                    <input type="text" name="publisher" value="{{ book.publisher }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">ISBN</label>
+                    <input type="text" name="isbn" value="{{ book.isbn }}" required
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">GRADE</label>
+                    <select name="grade" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="7" {% if book.grade == "7" %}selected{% endif %}>Grade 7</option>
+                        <option value="8" {% if book.grade == "8" %}selected{% endif %}>Grade 8</option>
+                        <option value="9" {% if book.grade == "9" %}selected{% endif %}>Grade 9</option>
+                        <option value="10" {% if book.grade == "10" %}selected{% endif %}>Grade 10</option>
+                        <option value="11" {% if book.grade == "11" %}selected{% endif %}>Grade 11</option>
+                        <option value="12" {% if book.grade == "12" %}selected{% endif %}>Grade 12</option>
+                        <option value="All" {% if book.grade == "All" %}selected{% endif %}>All Grades</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">QUANTITY</label>
+                    <input type="number" name="total_copies" value="{{ book.total_copies }}" required min="1"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                        SAVE CHANGES
+                    </button>
+                    <a href="{% url 'books_list' %}" style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none;">
+                        CANCEL
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

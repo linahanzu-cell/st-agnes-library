@@ -1,0 +1,138 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Header + Excel Import -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h2 style="color: #1f2937;">TEACHER REGISTRY</h2>
+    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px dashed #991b1b; display: flex; align-items: center; gap: 15px;">
+        <form method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+            {% csrf_token %}
+            <span style="font-size: 12px; font-weight: bold; color: #991b1b;">TEACHER IMPORT (EXCEL):</span>
+            <input type="file" name="excel_file" accept=".xlsx,.xls" style="font-size: 11px;">
+            <button type="submit" style="background: #111827; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">UPLOAD</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add New Teacher Form -->
+<div style="background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+    <h3 style="margin: 0 0 15px 0; color: #991b1b; font-size: 14px;">+ ADD NEW TEACHER</h3>
+    <form method="post" action="{% url 'teachers_list' %}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+        {% csrf_token %}
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">FIRST NAME</label>
+            <input type="text" name="first_name" required placeholder="e.g. Jane"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">LAST NAME</label>
+            <input type="text" name="last_name" required placeholder="e.g. Wanjiku"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">TEACHER ID</label>
+            <input type="text" name="teacher_id" required placeholder="e.g. T001"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 110px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">EMAIL</label>
+            <input type="email" name="email" required placeholder="e.g. jane@school.com"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 190px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">PHONE NUMBER</label>
+            <input type="text" name="phone_number" required placeholder="e.g. 0712345678"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 140px;">
+        </div>
+
+        <button type="submit"
+            style="background: #991b1b; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; height: 38px; margin-top: 18px;">
+            <i class="fas fa-plus"></i> ADD TEACHER
+        </button>
+    </form>
+</div>
+
+<!-- Teacher Table -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 15px; color: #4b5563;">FIRST NAME</th>
+                <th style="color: #4b5563;">LAST NAME</th>
+                <th style="color: #4b5563;">TEACHER ID</th>
+                <th style="color: #4b5563;">EMAIL</th>
+                <th style="color: #4b5563;">PHONE</th>
+                <th style="color: #4b5563;">STATUS</th>
+                <th style="text-align: center; color: #4b5563;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 15px; font-weight: 600;">{{ teacher.first_name }}</td>
+                <td>{{ teacher.last_name }}</td>
+                <td>{{ teacher.teacher_id }}</td>
+                <td>{{ teacher.email }}</td>
+                <td>{{ teacher.phone_number }}</td>
+                <td>
+                    <span style="background: {% if teacher.status == 'Active' %}#dcfce7{% else %}#fee2e2{% endif %};
+                        color: {% if teacher.status == 'Active' %}#166534{% else %}#991b1b{% endif %};
+                        padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
+                        {{ teacher.status }}
+                    </span>
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <!-- Edit -->
+                    <a href="{% url 'edit_teacher' teacher.id %}"
+                        style="color: #0891b2; font-size: 16px; margin-right: 8px; text-decoration: none;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <!-- Toggle Active/Inactive -->
+                    <form method="post" action="{% url 'toggle_student_status' teacher.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" title="Toggle Status"
+                            style="background: transparent; border: none; cursor: pointer; font-size: 13px; font-weight: bold; margin-right: 8px;
+                            color: {% if teacher.status == 'Active' %}#d97706{% else %}#166534{% endif %};">
+                            {% if teacher.status == 'Active' %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                    <!-- Delete -->
+                    <form method="post" action="{% url 'delete_teacher' teacher.id %}" style="display: inline;"
+                        onsubmit="return confirm('Are you sure you want to delete {{ teacher.first_name }} {{ teacher.last_name }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                            style="background: transparent; color: #991b1b; border: none; cursor: pointer; font-size: 16px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="padding: 50px; text-align: center; color: #9ca3af;">
+                    <i class="fas fa-chalkboard-teacher" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                    No teachers found. Add a teacher or upload an Excel file to begin.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

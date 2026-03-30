@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>St. Agnes | Browse Books</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+    .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+    .nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
+    .main-content { margin-left: 260px; flex: 1; padding: 40px; }
+    .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; margin: -40px -40px 40px -40px; }
+    .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Student Portal</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ student.first_name }} {{ student.last_name }}</div>
+    </div>
+    <nav>
+        <a href="{% url 'student_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'student_books' %}" class="nav-link"><i class="fas fa-book"></i> Browse Books</a>
+        <a href="{% url 'student_history' %}" class="nav-link"><i class="fas fa-history"></i> Borrowing History</a>
+        <a href="{% url 'student_fines' %}" class="nav-link"><i class="fas fa-exclamation-triangle"></i> My Fines</a>
+    </nav>
+</div>
+<div class="main-content">
+    <div class="top-bar">
+        <a href="{% url 'student_logout' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 style="color: #991b1b;">BROWSE BOOKS</h2>
+        <form method="get" style="display: flex; gap: 10px;">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search books..."
+                style="padding: 9px 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 250px;">
+            <button type="submit" style="background: #991b1b; color: white; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+
+    <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK ID</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">TITLE</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">AUTHOR</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">SUBJECT</th>
+                    <th style="padding: 12px 15px; text-align: left; color: #4b5563;">GRADE</th>
+                    <th style="padding: 12px 15px; text-align: center; color: #4b5563;">AVAILABLE</th>
+                    <th style="padding: 12px 15px; text-align: center; color: #4b5563;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in book_data %}
+                <tr style="border-bottom: 1px solid #f3f4f6;">
+                    <td style="padding: 12px 15px; color: #991b1b; font-weight: 600;">{{ item.book.book_id }}</td>
+                    <td style="padding: 12px 15px; font-weight: 600;">{{ item.book.title }}</td>
+                    <td style="padding: 12px 15px;">{{ item.book.author }}</td>
+                    <td style="padding: 12px 15px;">{{ item.book.subject }}</td>
+                    <td style="padding: 12px 15px;">Grade {{ item.book.grade }}</td>
+                    <td style="padding: 12px 15px; text-align: center;">
+                        {% if item.available > 0 %}
+                        <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                            {{ item.available }} Available
+                        </span>
+                        {% else %}
+                        <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                            Not Available
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 15px; text-align: center;">
+                        {% if item.already_borrowed %}
+                        <span style="background: #dbeafe; color: #1e40af; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+                            <i class="fas fa-check"></i> BORROWED
+                        </span>
+                        {% elif item.already_reserved %}
+                        <span style="background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+                            <i class="fas fa-clock"></i> RESERVED
+                        </span>
+                        {% elif item.available == 0 %}
+                        <span style="background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold;">
+                            NOT AVAILABLE
+                        </span>
+                        {% else %}
+                        <a href="{% url 'student_reserve' item.book.id %}"
+                            style="background: #991b1b; color: white; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none;">
+                            <i class="fas fa-bookmark"></i> RESERVE
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="padding: 40px; text-align: center; color: #9ca3af;">
+                        <i class="fas fa-search" style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
+                        No books found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

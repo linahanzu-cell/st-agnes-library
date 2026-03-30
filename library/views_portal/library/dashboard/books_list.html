@@ -1,0 +1,179 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h2 style="color: #1f2937;">LIBRARY INVENTORY (BOOKS)</h2>
+    <form method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data"
+        style="display: flex; align-items: center; gap: 10px;">
+        {% csrf_token %}
+        <input type="file" name="excel_file" accept=".xlsx,.xls" required
+            style="font-size: 12px;">
+        <button type="submit"
+            style="background: #991b1b; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">
+            UPLOAD LIST
+        </button>
+    </form>
+</div>
+
+<!-- Add New Book Form -->
+<div style="background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
+    <h3 style="margin: 0 0 15px 0; color: #991b1b; font-size: 14px;">+ ADD NEW BOOK</h3>
+    <form method="post" action="{% url 'books_list' %}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+        {% csrf_token %}
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">BOOK NAME</label>
+            <input type="text" name="title" required placeholder="e.g. KLB Mathematics"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 160px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">AUTHOR</label>
+            <input type="text" name="author" required placeholder="e.g. KLB Publishers"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 150px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">SUBJECT</label>
+            <input type="text" name="subject" required placeholder="e.g. Mathematics"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">CATEGORY</label>
+            <select name="category" required style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+                <option value="">--</option>
+                <option value="textbook">Textbook</option>
+                <option value="novel">Novel</option>
+                <option value="reference">Reference</option>
+                <option value="storybook">Story Book</option>
+                <option value="atlas">Atlas</option>
+                <option value="dictionary">Dictionary</option>
+                <option value="activity">Activity Book</option>
+                <option value="religious">Religious Book</option>
+                <option value="science">Science Book</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">PUBLISHER</label>
+            <input type="text" name="publisher" required placeholder="e.g. KLB"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 120px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">ISBN</label>
+            <input type="text" name="isbn" required placeholder="e.g. 978-9966-47"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">GRADE</label>
+            <select name="grade" required style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 100px;">
+                <option value="">--</option>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+                <option value="All">All Grades</option>
+            </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">QUANTITY</label>
+            <input type="number" name="total_copies" required placeholder="e.g. 40" min="1"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 90px;">
+        </div>
+
+        <button type="submit"
+            style="background: #991b1b; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; height: 38px; margin-top: 18px;">
+            <i class="fas fa-plus"></i> ADD BOOK
+        </button>
+    </form>
+</div>
+
+<!-- Books Table -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                <th style="padding: 15px; color: #4b5563;">BOOK ID</th>
+                <th style="color: #4b5563;">BOOK NAME</th>
+                <th style="color: #4b5563;">AUTHOR</th>
+                <th style="color: #4b5563;">SUBJECT</th>
+                <th style="color: #4b5563;">CATEGORY</th>
+                <th style="color: #4b5563;">PUBLISHER</th>
+                <th style="color: #4b5563;">GRADE</th>
+                <th style="color: #4b5563;">TOTAL</th>
+                <th style="color: #4b5563;">AVAILABLE</th>
+                <th style="text-align: center; color: #4b5563;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in book_data %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 15px; font-weight: 600; color: #991b1b;">{{ item.book.book_id }}</td>
+                <td style="font-weight: 600;">{{ item.book.title }}</td>
+                <td>{{ item.book.author }}</td>
+                <td>{{ item.book.subject }}</td>
+                <td>{{ item.book.category }}</td>
+                <td>{{ item.book.publisher }}</td>
+                <td>Grade {{ item.book.grade }}</td>
+                <td>
+                    <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
+                        {{ item.book.total_copies }}
+                    </span>
+                </td>
+                <td>
+                    {% if item.available > 0 %}
+                    <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
+                        {{ item.available }}
+                    </span>
+                    {% else %}
+                    <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
+                        0
+                    </span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <a href="{% url 'edit_book' item.book.id %}"
+                        style="color: #0891b2; font-size: 16px; margin-right: 8px; text-decoration: none;">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form method="post" action="{% url 'delete_book' item.book.id %}" style="display: inline;"
+                        onsubmit="return confirm('Are you sure you want to delete {{ item.book.title }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                            style="background: transparent; color: #991b1b; border: none; cursor: pointer; font-size: 16px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" style="padding: 50px; text-align: center; color: #9ca3af;">
+                    <i class="fas fa-book" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
+                    No books currently in stock. Add a book to begin.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

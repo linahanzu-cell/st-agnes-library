@@ -1,0 +1,114 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<h2 style="color: #991b1b; margin-bottom: 25px;">ISSUE BOOK</h2>
+
+<div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b; max-width: 700px;">
+    <form method="post" action="{% url 'issue_book' %}">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+
+            <!-- Borrower Type -->
+            <div>
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 8px;">BORROWER TYPE</label>
+                <div style="display: flex; gap: 20px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; color: #374151;">
+                        <input type="radio" name="borrower_type" value="student" checked onclick="showStudent()"> Student
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; color: #374151;">
+                        <input type="radio" name="borrower_type" value="teacher" onclick="showTeacher()"> Teacher
+                    </label>
+                </div>
+            </div>
+
+            <!-- Student Select -->
+            <div id="student_div">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT STUDENT</label>
+                <select name="student" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- Select Student --</option>
+                    {% for student in students %}
+                    <option value="{{ student.id }}">
+                        {{ student.first_name }} {{ student.last_name }} — Adm: {{ student.admission_number }} | Grade {{ student.grade }}{{ student.stream }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Teacher Select -->
+            <div id="teacher_div" style="display: none;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT TEACHER</label>
+                <select name="teacher" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- Select Teacher --</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.id }}">
+                        {{ teacher.first_name }} {{ teacher.last_name }} — ID: {{ teacher.teacher_id }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Book Select -->
+            <div>
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT BOOK</label>
+                <select name="book" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- Select Book --</option>
+                    {% for book in books %}
+                    <option value="{{ book.id }}">
+                        {{ book.title }} — {{ book.book_id }} | Grade {{ book.grade }} | Copies: {{ book.total_copies }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Quantity -->
+            <div>
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">NUMBER OF COPIES</label>
+                <input type="number" name="quantity" value="1" min="1" required
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
+                    <i class="fas fa-info-circle"></i> Enter more than 1 if issuing multiple copies e.g. for a whole class
+                </p>
+            </div>
+
+            <!-- Return Date -->
+            <div>
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">RETURN DATE</label>
+                <input type="date" name="date_due" required
+                    min="{{ today }}"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
+                    <i class="fas fa-info-circle"></i> Select the date the book must be returned
+                </p>
+            </div>
+
+            <button type="submit"
+                style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                <i class="fas fa-exchange-alt"></i> ISSUE BOOK
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function showStudent() {
+    document.getElementById('student_div').style.display = 'block';
+    document.getElementById('teacher_div').style.display = 'none';
+}
+function showTeacher() {
+    document.getElementById('student_div').style.display = 'none';
+    document.getElementById('teacher_div').style.display = 'block';
+}
+</script>
+
+{% endblock %}
