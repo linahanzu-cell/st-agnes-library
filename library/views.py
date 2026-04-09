@@ -7,6 +7,7 @@ from django.db.models import Sum, Q
 from django.contrib import messages
 from django.utils import timezone
 from functools import wraps
+from datetime import date
 import pandas as pd
 
 def welcome(request):
@@ -46,6 +47,8 @@ def home(request):
     active_loans = Loan.objects.filter(date_returned__isnull=True)
     total_fines = sum(loan.calculate_fine() for loan in active_loans if loan.student)
     total_inventory = Book.objects.aggregate(Sum('total_copies'))['total_copies__sum'] or 0
+    # FIX 1: Use quantity when calculating available books
+    issued_quantity = Loan.objects.filter(date_returned__isnull=True).aggregate(total=Sum('quantity'))['total'] or 0
     overdue_loans = []
     for loan in active_loans:
         if loan.student and loan.calculate_fine() > 0:
@@ -56,7 +59,7 @@ def home(request):
         'total_finances': total_fines,
         'total_students': Student.objects.count(),
         'total_teachers': Teacher.objects.count(),
-        'available_books': total_inventory - active_loans.count(),
+        'available_books': total_inventory - issued_quantity,
         'issued_books': active_loans.count(),
         'overdue_loans': overdue_loans,
         'pending_reservations': pending_reservations,
@@ -203,6 +206,7 @@ def books_list(request):
     books = Book.objects.all().order_by('grade', 'subject', 'title')
     book_data = []
     for book in books:
+        # FIX 2: Use quantity when calculating available books
         issued = Loan.objects.filter(book=book, date_returned__isnull=True).aggregate(
             total=Sum('quantity'))['total'] or 0
         available = book.total_copies - issued
@@ -326,15 +330,25 @@ def reports_view(request, report_type):
         books = Book.objects.all()
         book_data = []
         for book in books:
-            available = book.total_copies - Loan.objects.filter(book=book, date_returned__isnull=True).count()
+            issued = Loan.objects.filter(
+                book=book, date_returned__isnull=True
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            available = book.total_copies - issued
             book_data.append({'book': book, 'available': available})
         context['book_data'] = book_data
     elif report_type == 'issued_books':
-        context['loans'] = Loan.objects.filter(date_returned__isnull=True).select_related('book', 'student', 'teacher')
+        # Show ALL loans including returned ones
+        context['loans'] = Loan.objects.all().select_related(
+            'book', 'student', 'teacher'
+        ).order_by('-date_borrowed')
     elif report_type == 'student_report':
-        context['loans'] = Loan.objects.filter(student__isnull=False, date_returned__isnull=True).select_related('student', 'book')
+        context['loans'] = Loan.objects.filter(
+            student__isnull=False
+        ).select_related('student', 'book').order_by('-date_borrowed')
     elif report_type == 'teacher_report':
-        context['loans'] = Loan.objects.filter(teacher__isnull=False, date_returned__isnull=True).select_related('teacher', 'book')
+        context['loans'] = Loan.objects.filter(
+            teacher__isnull=False
+        ).select_related('teacher', 'book').order_by('-date_borrowed')
     return render(request, 'dashboard/reports.html', context)
 
 # ─── 9. TOGGLE STATUS ────────────────────────────────────────────
@@ -352,8 +366,12 @@ def toggle_status(request, person_type, person_id):
 # ─── 10. LOANS ───────────────────────────────────────────────────
 @login_required
 def loans_list(request):
-    active_loans = Loan.objects.filter(date_returned__isnull=True).select_related('book', 'student', 'teacher').order_by('-date_borrowed')
-    returned_loans = Loan.objects.filter(date_returned__isnull=False).select_related('book', 'student', 'teacher').order_by('-date_returned')[:20]
+    active_loans = Loan.objects.filter(
+        date_returned__isnull=True
+    ).select_related('book', 'student', 'teacher').order_by('-date_borrowed')
+    returned_loans = Loan.objects.filter(
+        date_returned__isnull=False
+    ).select_related('book', 'student', 'teacher').order_by('-date_returned')[:20]
     return render(request, 'dashboard/loans_list.html', {
         'active_loans': active_loans,
         'returned_loans': returned_loans,
@@ -374,12 +392,9 @@ def issue_book(request):
             return redirect('issue_book')
 
         book = get_object_or_404(Book, id=book_id)
-
-        # Check if enough copies are available
         issued_count = Loan.objects.filter(
             book=book, date_returned__isnull=True
         ).aggregate(total=Sum('quantity'))['total'] or 0
-
         available = book.total_copies - issued_count
 
         if quantity > available:
@@ -391,10 +406,7 @@ def issue_book(request):
             if Loan.objects.filter(book=book, student=student, date_returned__isnull=True).exists():
                 messages.error(request, f"{student.first_name} already has this book.")
                 return redirect('issue_book')
-            Loan.objects.create(
-                book=book, student=student,
-                date_due=date_due, quantity=quantity
-            )
+            Loan.objects.create(book=book, student=student, date_due=date_due, quantity=quantity)
             messages.success(request, f"{quantity} cop{'y' if quantity == 1 else 'ies'} of '{book.title}' issued to {student.first_name} {student.last_name}!")
 
         elif borrower_type == 'teacher' and teacher_id:
@@ -402,10 +414,7 @@ def issue_book(request):
             if Loan.objects.filter(book=book, teacher=teacher, date_returned__isnull=True).exists():
                 messages.error(request, f"{teacher.first_name} already has this book.")
                 return redirect('issue_book')
-            Loan.objects.create(
-                book=book, teacher=teacher,
-                date_due=date_due, quantity=quantity
-            )
+            Loan.objects.create(book=book, teacher=teacher, date_due=date_due, quantity=quantity)
             messages.success(request, f"{quantity} cop{'y' if quantity == 1 else 'ies'} of '{book.title}' issued to {teacher.first_name} {teacher.last_name}!")
         else:
             messages.error(request, "Please select a student or teacher.")
@@ -418,16 +427,21 @@ def issue_book(request):
     teachers = Teacher.objects.filter(status='Active').order_by('last_name')
     return render(request, 'dashboard/issue_book.html', {
         'books': books, 'students': students, 'teachers': teachers,
+        'today': date.today(),
     })
 
 @login_required
 def return_book(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     if request.method == 'POST':
+        # FIX 6: Calculate and save fine before marking returned
+        fine = loan.calculate_fine()
         loan.date_returned = timezone.now().date()
         loan.save()
-        name = f"{loan.student.first_name} {loan.student.last_name}" if loan.student else f"{loan.teacher.first_name} {loan.teacher.last_name}"
-        fine = loan.calculate_fine()
+        if loan.student:
+            name = f"{loan.student.first_name} {loan.student.last_name}"
+        else:
+            name = f"{loan.teacher.first_name} {loan.teacher.last_name}"
         if fine > 0:
             messages.warning(request, f"'{loan.book.title}' returned by {name}. Fine: KSH {fine}")
         else:
@@ -441,9 +455,7 @@ def reservations_list(request):
     approved = Reservation.objects.filter(status='approved').select_related('book', 'student', 'teacher').order_by('-date_reserved')
     rejected = Reservation.objects.filter(status='rejected').select_related('book', 'student', 'teacher').order_by('-date_reserved')
     return render(request, 'dashboard/reservations.html', {
-        'pending': pending,
-        'approved': approved,
-        'rejected': rejected,
+        'pending': pending, 'approved': approved, 'rejected': rejected,
     })
 
 @login_required
@@ -535,21 +547,15 @@ def student_books(request):
             book=book, date_returned__isnull=True
         ).aggregate(total=Sum('quantity'))['total'] or 0
         available = book.total_copies - issued
-        already_reserved = Reservation.objects.filter(
-            book=book, student=student, status='pending'
-        ).exists()
-        already_borrowed = Loan.objects.filter(
-            book=book, student=student, date_returned__isnull=True
-        ).exists()
+        already_reserved = Reservation.objects.filter(book=book, student=student, status='pending').exists()
+        already_borrowed = Loan.objects.filter(book=book, student=student, date_returned__isnull=True).exists()
         book_data.append({
             'book': book,
             'available': available,
             'already_reserved': already_reserved,
             'already_borrowed': already_borrowed,
         })
-    return render(request, 'student/books.html', {
-        'book_data': book_data, 'query': query, 'student': student
-    })
+    return render(request, 'student/books.html', {'book_data': book_data, 'query': query, 'student': student})
 
 @student_login_required
 def student_history(request):
@@ -647,7 +653,10 @@ def teacher_books(request):
         books = books.filter(Q(title__icontains=query) | Q(author__icontains=query) | Q(subject__icontains=query))
     book_data = []
     for book in books:
-        available = book.total_copies - Loan.objects.filter(book=book, date_returned__isnull=True).count()
+        issued = Loan.objects.filter(
+            book=book, date_returned__isnull=True
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        available = book.total_copies - issued
         already_reserved = Reservation.objects.filter(book=book, teacher=teacher, status='pending').exists()
         book_data.append({'book': book, 'available': available, 'already_reserved': already_reserved})
     return render(request, 'teacher/books.html', {'book_data': book_data, 'query': query, 'teacher': teacher})
@@ -668,13 +677,3 @@ def teacher_reserve(request, book_id):
         Reservation.objects.create(book=book, teacher=teacher)
         messages.success(request, f"Your reservation for '{book.title}' has been submitted! The librarian will approve it shortly.")
     return redirect('teacher_books')
-
-@login_required
-def edit_loan(request, loan_id):
-    loan = get_object_or_404(Loan, id=loan_id)
-    if request.method == 'POST':
-        loan.date_due = request.POST.get('date_due')
-        loan.save()
-        messages.success(request, "Loan updated successfully!")
-        return redirect('loans_list')
-    return render(request, 'dashboard/edit_loan.html', {'loan': loan})

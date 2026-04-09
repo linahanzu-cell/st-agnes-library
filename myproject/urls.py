@@ -32,7 +32,6 @@ urlpatterns = [
     path('loans/', views.loans_list, name='loans_list'),
     path('loans/issue/', views.issue_book, name='issue_book'),
     path('loans/return/<int:loan_id>/', views.return_book, name='return_book'),
-    path('loans/edit/<int:loan_id>/', views.edit_loan, name='edit_loan'),
     # RESERVATIONS
     path('reservations/', views.reservations_list, name='reservations_list'),
     path('reservations/approve/<int:reservation_id>/', views.approve_reservation, name='approve_reservation'),

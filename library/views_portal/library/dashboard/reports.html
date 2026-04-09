@@ -100,7 +100,8 @@
                 <th style="color: #4b5563;">BORROWER</th>
                 <th style="color: #4b5563;">TYPE</th>
                 <th style="color: #4b5563;">DATE BORROWED</th>
-                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">RETURN DATE</th>
+                <th style="color: #4b5563;">DATE RETURNED</th>
                 <th style="color: #4b5563;">STATUS</th>
             </tr>
         </thead>
@@ -126,16 +127,23 @@
                 </td>
                 <td>{{ loan.date_borrowed }}</td>
                 <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>{{ loan.date_returned|default:"Not yet" }}</td>
                 <td>
+                    {% if loan.date_returned %}
+                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        Returned
+                    </span>
+                    {% else %}
                     <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">
                         Issued
                     </span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
-                    No books currently issued.
+                <td colspan="9" style="padding: 40px; text-align: center; color: #9ca3af;">
+                    No books have been issued yet.
                 </td>
             </tr>
             {% endfor %}
@@ -150,8 +158,8 @@
         <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
             <i class="fas fa-user-graduate"></i> Student Borrowing Report
         </h3>
-    </div>
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    </div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; min-width: 900px;">
         <thead>
             <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
                 <th style="padding: 12px 15px; color: #4b5563;">STUDENT NAME</th>
@@ -160,7 +168,9 @@
                 <th style="color: #4b5563;">STREAM</th>
                 <th style="color: #4b5563;">BOOK BORROWED</th>
                 <th style="color: #4b5563;">DATE BORROWED</th>
-                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">RETURN DATE</th>
+                <th style="color: #4b5563;">DATE RETURNED</th>
+                <th style="color: #4b5563;">STATUS</th>
                 <th style="color: #4b5563;">FINE (KSH)</th>
             </tr>
         </thead>
@@ -176,6 +186,14 @@
                 <td>{{ loan.book.title }}</td>
                 <td>{{ loan.date_borrowed }}</td>
                 <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>{{ loan.date_returned|default:"Not yet" }}</td>
+                <td>
+                    {% if loan.date_returned %}
+                    <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">Returned</span>
+                    {% else %}
+                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">Active</span>
+                    {% endif %}
+                </td>
                 <td>
                     {% if loan.calculate_fine > 0 %}
                         <span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
@@ -190,7 +208,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                <td colspan="10" style="padding: 40px; text-align: center; color: #9ca3af;">
                     No students have borrowed books yet.
                 </td>
             </tr>
@@ -206,8 +224,8 @@
         <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
             <i class="fas fa-chalkboard-teacher"></i> Teacher Borrowing Report
         </h3>
-    </div>
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    </div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; min-width:900px;">
         <thead>
             <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
                 <th style="padding: 12px 15px; color: #4b5563;">TEACHER NAME</th>
@@ -216,7 +234,8 @@
                 <th style="color: #4b5563;">PHONE</th>
                 <th style="color: #4b5563;">BOOK BORROWED</th>
                 <th style="color: #4b5563;">DATE BORROWED</th>
-                <th style="color: #4b5563;">DUE DATE</th>
+                <th style="color: #4b5563;">RETURN DATE</th>
+                <th style="color: #4b5563;">DATE RETURNED</th>
                 <th style="color: #4b5563;">STATUS</th>
             </tr>
         </thead>
@@ -232,15 +251,18 @@
                 <td>{{ loan.book.title }}</td>
                 <td>{{ loan.date_borrowed }}</td>
                 <td style="color: #991b1b;">{{ loan.date_due }}</td>
+                <td>{{ loan.date_returned|default:"Not yet" }}</td>
                 <td>
-                    <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                        Issued
-                    </span>
+                    {% if loan.date_returned %}
+                    <span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Returned</span>
+                    {% else %}
+                    <span style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Active</span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="padding: 40px; text-align: center; color: #9ca3af;">
+                <td colspan="9" style="padding: 40px; text-align: center; color: #9ca3af;">
                     No teachers have borrowed books yet.
                 </td>
             </tr>
