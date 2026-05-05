@@ -61,31 +61,43 @@
             <!-- Book Select -->
             <div>
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT BOOK</label>
-                <select name="book" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                <select name="book" id="book_select" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Book --</option>
                     {% for book in books %}
                     <option value="{{ book.id }}">
-                        {{ book.title }} — {{ book.book_id }} | Grade {{ book.grade }} | Copies: {{ book.total_copies }}
+                        {{ book.title }} — {{ book.book_id }} | Grade {{ book.grade }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Quantity -->
+            <!-- Copy Number Select -->
             <div>
-                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">NUMBER OF COPIES</label>
-                <input type="number" name="quantity" value="1" min="1" required
-                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">
+                    SELECT COPY NUMBER
+                </label>
+                <select name="copy" id="copy_select" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- Select Book First --</option>
+                    {% for copy in copies %}
+                    <option value="{{ copy.id }}" data-book="{{ copy.book.id }}">
+                        {{ copy.copy_number }} — {{ copy.book.title }}
+                    </option>
+                    {% endfor %}
+                </select>
                 <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Enter more than 1 if issuing multiple copies e.g. for a whole class
+                    <i class="fas fa-info-circle"></i> Only available copies are shown
                 </p>
+            </div>
+
+            <!-- Available copies summary -->
+            <div id="copies_info" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 15px; font-size: 13px; color: #166534;">
+                <i class="fas fa-check-circle"></i> <span id="copies_count"></span>
             </div>
 
             <!-- Return Date -->
             <div>
-                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">RETURN DATE</label>
-                <input type="date" name="date_due" required
-                    min="{{ today }}"
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">RETURN DATE (DUE DATE)</label>
+                <input type="date" name="date_due" required min="{{ today }}"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
                     <i class="fas fa-info-circle"></i> Select the date the book must be returned
@@ -105,10 +117,54 @@ function showStudent() {
     document.getElementById('student_div').style.display = 'block';
     document.getElementById('teacher_div').style.display = 'none';
 }
+
 function showTeacher() {
     document.getElementById('student_div').style.display = 'none';
     document.getElementById('teacher_div').style.display = 'block';
 }
+
+// Filter copies based on selected book
+document.getElementById('book_select').addEventListener('change', function() {
+    var bookId = this.value;
+    var copySelect = document.getElementById('copy_select');
+    var allOptions = copySelect.querySelectorAll('option');
+    var visibleCount = 0;
+
+    allOptions.forEach(function(option) {
+        if (option.value === '') {
+            option.style.display = '';
+            option.text = bookId ? '-- Select Copy --' : '-- Select Book First --';
+            return;
+        }
+        if (bookId === '' || option.getAttribute('data-book') === bookId) {
+            option.style.display = '';
+            visibleCount++;
+        } else {
+            option.style.display = 'none';
+        }
+    });
+
+    copySelect.value = '';
+
+    // Show available copies count
+    var infoDiv = document.getElementById('copies_info');
+    var countSpan = document.getElementById('copies_count');
+    if (bookId && visibleCount > 0) {
+        infoDiv.style.display = 'block';
+        countSpan.textContent = visibleCount + ' available cop' + (visibleCount === 1 ? 'y' : 'ies') + ' for this book';
+        infoDiv.style.background = '#f0fdf4';
+        infoDiv.style.borderColor = '#bbf7d0';
+        infoDiv.style.color = '#166534';
+    } else if (bookId && visibleCount === 0) {
+        infoDiv.style.display = 'block';
+        countSpan.textContent = 'No available copies for this book!';
+        infoDiv.style.background = '#fee2e2';
+        infoDiv.style.borderColor = '#fca5a5';
+        infoDiv.style.color = '#991b1b';
+    } else {
+        infoDiv.style.display = 'none';
+    }
+});
 </script>
 
 {% endblock %}

@@ -56,40 +56,73 @@ class Book(models.Model):
         ('religious', 'Religious Book'),
         ('activity', 'Activity Book'),
     ]
-
     book_id = models.CharField(max_length=50, unique=True, blank=True)
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=200)
     subject = models.CharField(max_length=100)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default='textbook')
     publisher = models.CharField(max_length=200, default='')
-    isbn = models.CharField(max_length=50, unique=True)
     grade = models.CharField(max_length=20)
     total_copies = models.IntegerField(default=1)
 
     def save(self, *args, **kwargs):
+        is_new = not self.pk
+        old_total = 0
+        if not is_new:
+            try:
+                old_total = Book.objects.get(pk=self.pk).total_copies
+            except Book.DoesNotExist:
+                old_total = 0
         if not self.book_id:
-            last = Book.objects.order_by('-id').first()
-            next_num = (last.id + 1) if last else 1
-            self.book_id = f"BK-{next_num:04d}"
+            # Generate next sequential book ID
+            count = Book.objects.count() + 1
+            self.book_id = f"BK-{count:04d}"
+            # Ensure uniqueness
+            while Book.objects.filter(book_id=self.book_id).exists():
+                count += 1
+                self.book_id = f"BK-{count:04d}"
         super().save(*args, **kwargs)
+        if is_new:
+            for i in range(1, self.total_copies + 1):
+                copy_number = f"{self.book_id}-{i:03d}"
+                BookCopy.objects.create(book=self, copy_number=copy_number)
+        elif self.total_copies > old_total:
+            for i in range(old_total + 1, self.total_copies + 1):
+                copy_number = f"{self.book_id}-{i:03d}"
+                BookCopy.objects.create(book=self, copy_number=copy_number)
 
     def __str__(self):
         return self.title
 
+class BookCopy(models.Model):
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='copies')
+    copy_number = models.CharField(max_length=50, unique=True)
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.copy_number} - {self.book.title}"
+
 class Loan(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    copy = models.ForeignKey(BookCopy, on_delete=models.SET_NULL, null=True, blank=True)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True, blank=True)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=True, blank=True)
     date_borrowed = models.DateField(auto_now_add=True)
     date_due = models.DateField()
     date_returned = models.DateField(null=True, blank=True)
     quantity = models.IntegerField(default=1)
+    fine_amount = models.IntegerField(default=0)
 
     def calculate_fine(self):
         if not self.date_returned and timezone.now().date() > self.date_due:
             days_late = (timezone.now().date() - self.date_due).days
             return days_late * 50
+        return 0
+
+    @property
+    def days_overdue(self):
+        if not self.date_returned and timezone.now().date() > self.date_due:
+            return (timezone.now().date() - self.date_due).days
         return 0
 
 class Reservation(models.Model):

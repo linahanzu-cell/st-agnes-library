@@ -70,8 +70,11 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f9fafb; disp
 
 <div class="main-content">
     <div class="top-bar">
+        <a href="{% url 'landing_page' %}" style="color: #065f46;">
+            <i class="fas fa-home"></i> PORTAL HOME
+        </a>
         <a href="{% url 'profile' %}">PROFILE</a>
-        <a href="{% url 'login' %}" style="color: #991b1b;">LOGOUT</a>
+        <a href="{% url 'logout' %}" style="color: #991b1b;">LOGOUT</a>
     </div>
     <div class="content-body">
         {% block content %}{% endblock %}

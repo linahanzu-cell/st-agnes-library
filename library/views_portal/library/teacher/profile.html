@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>St. Agnes | Teacher Profile</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+    .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #065f46; background: #111827; }
+    .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+    .nav-link:hover { background: #111827; color: #34d399; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #34d399; width: 20px; text-align: center; }
+    .main-content { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; }
+    .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+    .content-body { padding: 40px; flex: 1; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #34d399; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Teacher Portal</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+    </div>
+    <nav>
+        <a href="{% url 'teacher_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'teacher_books' %}" class="nav-link"><i class="fas fa-book"></i> Browse Books</a>
+        <a href="{% url 'teacher_history' %}" class="nav-link"><i class="fas fa-history"></i> Borrowing History</a>
+        <a href="{% url 'teacher_report' %}" class="nav-link"><i class="fas fa-chart-bar"></i> My Report</a>
+        <a href="{% url 'teacher_profile' %}" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+        <a href="{% url 'landing_page' %}" class="nav-link"><i class="fas fa-home"></i> Portal Home</a>
+    </nav>
+</div>
+<div class="main-content">
+    <div class="top-bar">
+        <a href="{% url 'teacher_logout' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+    <div class="content-body">
+        <h2 style="color: #065f46; margin-bottom: 25px;">MY PROFILE</h2>
+
+        {% if error %}
+        <div style="background: #fee2e2; color: #991b1b; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if messages %}
+        {% for message in messages %}
+        <div style="background: #dcfce7; color: #166534; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div style="display: flex; gap: 25px; flex-wrap: wrap;">
+
+            <!-- Profile Info -->
+            <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex: 1; min-width: 280px;">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="width: 80px; height: 80px; background: #065f46; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                        <i class="fas fa-chalkboard-teacher" style="font-size: 35px; color: white;"></i>
+                    </div>
+                    <h3 style="color: #1f2937; font-size: 18px;">{{ teacher.first_name }} {{ teacher.last_name }}</h3>
+                    <p style="color: #065f46; font-weight: bold; font-size: 13px;">Teacher</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Teacher ID</span>
+                        <span style="color: #1f2937; font-weight: 600;">{{ teacher.teacher_id }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Email</span>
+                        <span style="color: #1f2937; font-weight: 600;">{{ teacher.email }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Phone</span>
+                        <span style="color: #1f2937; font-weight: 600;">{{ teacher.phone_number }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Status</span>
+                        <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">{{ teacher.status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex: 1.5; min-width: 300px;">
+                <h4 style="color: #1f2937; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #065f46; padding-bottom: 10px;">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </h4>
+                <form method="post">
+                    {% csrf_token %}
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FIRST NAME</label>
+                            <input type="text" name="first_name" value="{{ teacher.first_name }}"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">LAST NAME</label>
+                            <input type="text" name="last_name" value="{{ teacher.last_name }}"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL</label>
+                            <input type="email" name="email" value="{{ teacher.email }}"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PHONE NUMBER</label>
+                            <input type="text" name="phone_number" value="{{ teacher.phone_number }}"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        </div>
+                        <div style="border-top: 1px solid #e5e7eb; padding-top: 15px;">
+                            <h5 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 12px;">Change Password (optional)</h5>
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">NEW PASSWORD</label>
+                                <input type="password" name="new_password" placeholder="Leave blank to keep current"
+                                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">CONFIRM PASSWORD</label>
+                                <input type="password" name="confirm_password" placeholder="Confirm new password"
+                                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            </div>
+                        </div>
+                        <button type="submit"
+                            style="background: #065f46; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                            <i class="fas fa-save"></i> SAVE CHANGES
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

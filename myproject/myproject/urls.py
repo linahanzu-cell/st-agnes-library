@@ -16,11 +16,15 @@ urlpatterns = [
     path('students/edit/<int:student_id>/', views.edit_student, name='edit_student'),
     path('students/delete/<int:student_id>/', views.delete_student, name='delete_student'),
     path('students/toggle/<int:student_id>/', views.toggle_student_status, name='toggle_student_status'),
+    path('student/report/', views.student_report, name='student_report'),
+    path('student/profile/', views.student_profile, name='student_profile'),
     # TEACHERS
     path('teachers/', views.teachers_list, name='teachers_list'),
     path('teachers/edit/<int:teacher_id>/', views.edit_teacher, name='edit_teacher'),
     path('teachers/delete/<int:teacher_id>/', views.delete_teacher, name='delete_teacher'),
     path('teachers/toggle/<int:teacher_id>/', views.toggle_teacher_status, name='toggle_teacher_status'),
+    path('teacher/report/', views.teacher_report, name='teacher_report'),
+    path('teacher/profile/', views.teacher_profile, name='teacher_profile'),
     # BOOKS
     path('books/', views.books_list, name='books_list'),
     path('books/edit/<int:book_id>/', views.edit_book, name='edit_book'),

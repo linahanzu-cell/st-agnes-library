@@ -1,5 +1,17 @@
 {% extends 'layout/base.html' %}
 {% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
 <div style="max-width: 600px; margin: 0 auto;">
     <h2 style="color: #991b1b; margin-bottom: 25px;">EDIT STUDENT</h2>
     <div style="background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b;">
@@ -48,15 +60,30 @@
                     </select>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="submit" style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                <!-- Reset Password Section -->
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 15px; background: #fef9c3; border-radius: 6px; padding: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" name="reset_password"
+                            style="width: 16px; height: 16px; accent-color: #991b1b;">
+                        <div>
+                            <span style="font-size: 13px; font-weight: bold; color: #374151;">Reset Password</span>
+                            <p style="font-size: 11px; color: #6b7280; margin: 3px 0 0;">
+                                Student will be asked to create a new password on next login
+                            </p>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <button type="submit"
+                        style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer;">
                         SAVE CHANGES
                     </button>
-                    <a href="{% url 'students_list' %}" style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none;">
+                    <a href="{% url 'students_list' %}"
+                        style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none;">
                         CANCEL
                     </a>
                 </div>
-
             </div>
         </form>
     </div>

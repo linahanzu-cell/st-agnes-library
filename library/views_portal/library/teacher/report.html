@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>St. Agnes | Teacher Report</title>
+{% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+    .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
+    .nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
+    .main-content { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; }
+    .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
+    .content-body { padding: 40px; flex: 1; }
+    .print-header { display: none; }
+    .print-footer { display: none; }
+    @media print {
+        .sidebar, .top-bar, .no-print { display: none !important; }
+        .main-content { margin-left: 0 !important; }
+        .content-body { padding: 10px !important; }
+        .print-header { display: block !important; }
+        .print-footer { display: block !important; }
+        body { background: white; font-size: 11px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Teacher Portal</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+    </div>
+    <nav>
+        <a href="{% url 'teacher_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'teacher_books' %}" class="nav-link"><i class="fas fa-book"></i> Browse Books</a>
+        <a href="{% url 'teacher_history' %}" class="nav-link"><i class="fas fa-history"></i> Borrowing History</a>
+        <a href="{% url 'teacher_report' %}" class="nav-link"><i class="fas fa-chart-bar"></i> My Report</a>
+        <a href="{% url 'teacher_profile' %}" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+        <a href="{% url 'landing_page' %}" class="nav-link"><i class="fas fa-home"></i> Portal Home</a>
+    </nav>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    <div class="top-bar no-print">
+        <button onclick="window.print()" style="background: #991b1b; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">
+            <i class="fas fa-print"></i> PRINT REPORT
+        </button>
+        <a href="{% url 'teacher_logout' %}" style="color: #991b1b;">LOGOUT</a>
+    </div>
+
+    <div class="content-body">
+
+        <!-- PRINT HEADER -->
+        <div class="print-header">
+            <table style="width: 100%; border-bottom: 3px solid #991b1b; padding-bottom: 12px; margin-bottom: 15px;">
+                <tr>
+                    <td style="width: 90px;">
+                        <img src="{% static 'images/logo.png' %}" style="height: 85px;" alt="School Logo">
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="font-size: 18px; font-weight: 900; color: #1f2937;">ST. AGNES GIRLS' HIGH SCHOOL</div>
+                        <div style="font-size: 13px; color: #991b1b; font-weight: bold;">SHIBUYA</div>
+                        <div style="font-size: 11px; color: #6b7280;">Library Management System</div>
+                        <div style="font-size: 13px; font-weight: bold; margin-top: 4px;">TEACHER LIBRARY REPORT</div>
+                        <div style="font-size: 11px; color: #6b7280;">Date Generated: {% now "d F Y" %}</div>
+                    </td>
+                    <td style="width: 90px; text-align: right; font-size: 10px; color: #6b7280;">
+                        <div>Discipline</div>
+                        <div>For Success</div>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Teacher Info Box -->
+            <table style="width: 100%; border: 1px solid #e5e7eb; margin-bottom: 15px; font-size: 12px;">
+                <tr style="background: #f9fafb;">
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280; width: 25%;">TEACHER NAME:</td>
+                    <td style="padding: 8px 15px; font-weight: 600;">{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280; width: 25%;">TEACHER ID:</td>
+                    <td style="padding: 8px 15px; font-weight: 600;">{{ teacher.teacher_id }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280;">PHONE NUMBER:</td>
+                    <td style="padding: 8px 15px;">{{ teacher.phone_number }}</td>
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280;">EMAIL:</td>
+                    <td style="padding: 8px 15px;">{{ teacher.email }}</td>
+                </tr>
+                <tr style="background: #f9fafb;">
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280;">STATUS:</td>
+                    <td style="padding: 8px 15px;">{{ teacher.status }}</td>
+                    <td style="padding: 8px 15px; font-weight: bold; color: #6b7280;">DATE:</td>
+                    <td style="padding: 8px 15px;">{% now "d F Y" %}</td>
+                </tr>
+            </table>
+        </div>
+        <!-- END PRINT HEADER -->
+
+        <!-- Screen Title -->
+        <h2 class="no-print" style="color: #991b1b; margin-bottom: 5px;">MY LIBRARY REPORT</h2>
+        <p class="no-print" style="color: #6b7280; margin-bottom: 25px; font-size: 13px;">
+            {{ teacher.first_name }} {{ teacher.last_name }} &nbsp;|&nbsp; ID: {{ teacher.teacher_id }} &nbsp;|&nbsp; {{ teacher.phone_number }}
+        </p>
+
+        <!-- Summary Cards -->
+        <div class="no-print" style="display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+            <div style="background: #991b1b; color: white; padding: 20px 25px; border-radius: 12px; flex: 1; min-width: 150px;">
+                <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Total Borrowed</p>
+                <h3 style="font-size: 30px; font-weight: 900;">{{ loans.count }}</h3>
+            </div>
+            <div style="background: #1f2937; color: white; padding: 20px 25px; border-radius: 12px; flex: 1; min-width: 150px;">
+                <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Currently Issued</p>
+                <h3 style="font-size: 30px; font-weight: 900;">{{ active_count }}</h3>
+            </div>
+            <div style="background: #1d4ed8; color: white; padding: 20px 25px; border-radius: 12px; flex: 1; min-width: 150px;">
+                <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Returned</p>
+                <h3 style="font-size: 30px; font-weight: 900;">{{ returned_count }}</h3>
+            </div>
+        </div>
+
+        <!-- Report Table -->
+        <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="background: #991b1b; padding: 15px 20px;">
+                <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+                    <i class="fas fa-list"></i> Complete Borrowing Record
+                </h3>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                    <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">#</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE BORROWED</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DUE DATE</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE RETURNED</th>
+                        <th style="padding: 12px 15px; text-align: left; color: #4b5563;">STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 12px 15px; color: #6b7280;">{{ forloop.counter }}</td>
+                        <td style="padding: 12px 15px; font-weight: 600;">{{ loan.book.title }}</td>
+                        <td style="padding: 12px 15px;">{{ loan.date_borrowed }}</td>
+                        <td style="padding: 12px 15px; color: #991b1b;">{{ loan.date_due }}</td>
+                        <td style="padding: 12px 15px; color: #065f46; font-weight: bold;">
+                            {% if loan.date_returned %}{{ loan.date_returned }}{% else %}—{% endif %}
+                        </td>
+                        <td style="padding: 12px 15px;">
+                            {% if loan.date_returned %}
+                                <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">RETURNED</span>
+                            {% else %}
+                                <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">ACTIVE</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 40px; text-align: center; color: #9ca3af;">
+                            No borrowing records yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PRINT FOOTER -->
+        <div class="print-footer" style="margin-top: 25px; text-align: center; font-size: 10px; color: #6b7280; border-top: 1px solid #991b1b; padding-top: 8px;">
+            St. Agnes Girls' High School Shibuya &nbsp;|&nbsp; Teacher Library Report &nbsp;|&nbsp; {% now "d F Y H:i" %} &nbsp;|&nbsp; Confidential
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

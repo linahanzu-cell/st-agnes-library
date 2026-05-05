@@ -1,26 +1,108 @@
 {% extends 'layout/base.html' %}
 {% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
 <h2 style="color: #1f2937; margin-bottom: 30px;">LIBRARIAN PROFILE</h2>
 
-<div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); max-width: 600px;">
-    <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 30px;">
-        <div style="width: 100px; height: 100px; background: #991b1b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px;">
-            <i class="fas fa-user-tie"></i>
+<div style="display: flex; gap: 25px; flex-wrap: wrap; max-width: 900px;">
+
+    <!-- Profile Info Card -->
+    <div style="background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); flex: 1; min-width: 250px;">
+        <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
+            <div style="width: 80px; height: 80px; background: #991b1b; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px;">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; color: #111827; font-size: 18px;">{{ user.get_full_name|default:user.username }}</h3>
+                <p style="margin: 5px 0 0; color: #991b1b; font-weight: bold; font-size: 13px;">Chief Librarian</p>
+            </div>
         </div>
-        <div>
-            <h3 style="margin: 0; color: #111827;">{{ user.get_full_name|default:user.username }}</h3>
-            <p style="margin: 5px 0; color: #991b1b; font-weight: bold;">Chief Librarian</p>
+        <div style="border-top: 1px solid #f3f4f6; padding-top: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                <span style="color: #6b7280; font-weight: bold;">Username</span>
+                <span style="color: #1f2937; font-weight: 600;">{{ user.username }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                <span style="color: #6b7280; font-weight: bold;">Email</span>
+                <span style="color: #1f2937; font-weight: 600;">{{ user.email|default:"Not set" }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                <span style="color: #6b7280; font-weight: bold;">Last Login</span>
+                <span style="color: #1f2937; font-weight: 600;">{{ user.last_login|date:"D, d M Y" }}</span>
+            </div>
         </div>
     </div>
 
-    <div style="border-top: 1px solid #f3f4f6; padding-top: 20px;">
-        <p><strong>Username:</strong> {{ user.username }}</p>
-        <p><strong>Email Address:</strong> {{ user.email|default:"Not set" }}</p>
-        <p><strong>Last Login:</strong> {{ user.last_login|date:"D, d M Y" }}</p>
+    <!-- Edit Form -->
+    <div style="background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); flex: 1.5; min-width: 300px;">
+        <h4 style="color: #1f2937; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #991b1b; padding-bottom: 10px;">
+            <i class="fas fa-edit"></i> Edit Profile
+        </h4>
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FIRST NAME</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}"
+                        placeholder="Enter first name"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">LAST NAME</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}"
+                        placeholder="Enter last name"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL ADDRESS</label>
+                    <input type="email" name="email" value="{{ user.email }}"
+                        placeholder="Enter email address"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 15px;">
+                    <h5 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 12px;">
+                        Change Password (optional)
+                    </h5>
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">NEW PASSWORD</label>
+                        <input type="password" name="new_password"
+                            placeholder="Leave blank to keep current password"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">CONFIRM NEW PASSWORD</label>
+                        <input type="password" name="confirm_password"
+                            placeholder="Confirm new password"
+                            style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <button type="submit"
+                        style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                        <i class="fas fa-save"></i> SAVE CHANGES
+                    </button>
+                    <a href="{% url 'home' %}"
+                        style="background: #f3f4f6; color: #374151; padding: 12px 25px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 14px;">
+                        CANCEL
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
-    
-    <button style="margin-top: 20px; background: #111827; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-        Edit Profile Information
-    </button>
 </div>
 {% endblock %}
