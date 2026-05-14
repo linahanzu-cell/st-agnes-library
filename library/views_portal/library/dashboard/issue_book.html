@@ -32,23 +32,61 @@
                 </div>
             </div>
 
-            <!-- Student Select -->
+            <!-- Student Section -->
             <div id="student_div">
+
+                <!-- Grade + Stream Filter -->
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FILTER BY GRADE</label>
+                        <select id="grade_filter" onchange="filterStudents()"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                            <option value="">All Grades</option>
+                            <option value="7">Grade 7</option>
+                            <option value="8">Grade 8</option>
+                            <option value="9">Grade 9</option>
+                            <option value="10">Grade 10</option>
+                            <option value="11">Grade 11</option>
+                            <option value="12">Grade 12</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FILTER BY STREAM</label>
+                        <select id="stream_filter" onchange="filterStudents()"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                            <option value="">All Streams</option>
+                            <option value="A">Stream A</option>
+                            <option value="B">Stream B</option>
+                            <option value="C">Stream C</option>
+                            <option value="D">Stream D</option>
+                            <option value="E">Stream E</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Student Dropdown -->
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT STUDENT</label>
-                <select name="student" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                <select name="student" id="student_select"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Student --</option>
                     {% for student in students %}
-                    <option value="{{ student.id }}">
+                    <option value="{{ student.id }}"
+                        data-grade="{{ student.grade }}"
+                        data-stream="{{ student.stream }}">
                         {{ student.first_name }} {{ student.last_name }} — Adm: {{ student.admission_number }} | Grade {{ student.grade }}{{ student.stream }}
                     </option>
                     {% endfor %}
                 </select>
+
+                <!-- Student count info -->
+                <p id="student_count" style="font-size: 11px; color: #6b7280; margin-top: 5px;"></p>
             </div>
 
-            <!-- Teacher Select -->
+            <!-- Teacher Section -->
             <div id="teacher_div" style="display: none;">
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT TEACHER</label>
-                <select name="teacher" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                <select name="teacher"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Teacher --</option>
                     {% for teacher in teachers %}
                     <option value="{{ teacher.id }}">
@@ -61,7 +99,8 @@
             <!-- Book Select -->
             <div>
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT BOOK</label>
-                <select name="book" id="book_select" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                <select name="book" id="book_select" required onchange="filterCopies()"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Book --</option>
                     {% for book in books %}
                     <option value="{{ book.id }}">
@@ -71,27 +110,23 @@
                 </select>
             </div>
 
-            <!-- Copy Number Select -->
+            <!-- Copy Number Select — dynamically filtered ✅ -->
             <div>
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">
                     SELECT COPY NUMBER
                 </label>
-                <select name="copy" id="copy_select" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                <select name="copy" id="copy_select"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Book First --</option>
-                    {% for copy in copies %}
-                    <option value="{{ copy.id }}" data-book="{{ copy.book.id }}">
-                        {{ copy.copy_number }} — {{ copy.book.title }}
-                    </option>
-                    {% endfor %}
                 </select>
                 <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
                     <i class="fas fa-info-circle"></i> Only available copies are shown
                 </p>
             </div>
 
-            <!-- Available copies summary -->
-            <div id="copies_info" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 15px; font-size: 13px; color: #166534;">
-                <i class="fas fa-check-circle"></i> <span id="copies_count"></span>
+            <!-- Available copies info -->
+            <div id="copies_info" style="display: none; border-radius: 6px; padding: 10px 15px; font-size: 13px; font-weight: bold;">
+                <i class="fas fa-info-circle"></i> <span id="copies_count"></span>
             </div>
 
             <!-- Return Date -->
@@ -113,6 +148,32 @@
 </div>
 
 <script>
+// All copies data from Django — stored in JS array ✅
+// This avoids the Safari display:none option bug
+var allCopies = [
+    {% for copy in copies %}
+    {
+        id: "{{ copy.id }}",
+        bookId: "{{ copy.book.id }}",
+        copyNumber: "{{ copy.copy_number }}",
+        bookTitle: "{{ copy.book.title }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// All students data for filtering
+var allStudents = [
+    {% for student in students %}
+    {
+        id: "{{ student.id }}",
+        name: "{{ student.first_name }} {{ student.last_name }}",
+        adm: "{{ student.admission_number }}",
+        grade: "{{ student.grade }}",
+        stream: "{{ student.stream }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
 function showStudent() {
     document.getElementById('student_div').style.display = 'block';
     document.getElementById('teacher_div').style.display = 'none';
@@ -123,48 +184,78 @@ function showTeacher() {
     document.getElementById('teacher_div').style.display = 'block';
 }
 
-// Filter copies based on selected book
-document.getElementById('book_select').addEventListener('change', function() {
-    var bookId = this.value;
+// Filter copies when book is selected ✅
+function filterCopies() {
+    var bookId = document.getElementById('book_select').value;
     var copySelect = document.getElementById('copy_select');
-    var allOptions = copySelect.querySelectorAll('option');
-    var visibleCount = 0;
-
-    allOptions.forEach(function(option) {
-        if (option.value === '') {
-            option.style.display = '';
-            option.text = bookId ? '-- Select Copy --' : '-- Select Book First --';
-            return;
-        }
-        if (bookId === '' || option.getAttribute('data-book') === bookId) {
-            option.style.display = '';
-            visibleCount++;
-        } else {
-            option.style.display = 'none';
-        }
-    });
-
-    copySelect.value = '';
-
-    // Show available copies count
     var infoDiv = document.getElementById('copies_info');
     var countSpan = document.getElementById('copies_count');
-    if (bookId && visibleCount > 0) {
-        infoDiv.style.display = 'block';
-        countSpan.textContent = visibleCount + ' available cop' + (visibleCount === 1 ? 'y' : 'ies') + ' for this book';
-        infoDiv.style.background = '#f0fdf4';
-        infoDiv.style.borderColor = '#bbf7d0';
-        infoDiv.style.color = '#166534';
-    } else if (bookId && visibleCount === 0) {
-        infoDiv.style.display = 'block';
-        countSpan.textContent = 'No available copies for this book!';
-        infoDiv.style.background = '#fee2e2';
-        infoDiv.style.borderColor = '#fca5a5';
-        infoDiv.style.color = '#991b1b';
-    } else {
+
+    // Clear current options
+    copySelect.innerHTML = '';
+
+    if (!bookId) {
+        copySelect.innerHTML = '<option value="">-- Select Book First --</option>';
         infoDiv.style.display = 'none';
+        return;
     }
-});
+
+    // Filter copies for selected book only
+    var filtered = allCopies.filter(function(c) {
+        return c.bookId === bookId;
+    });
+
+    if (filtered.length === 0) {
+        copySelect.innerHTML = '<option value="">-- No copies available --</option>';
+        infoDiv.style.display = 'block';
+        infoDiv.style.background = '#fee2e2';
+        infoDiv.style.color = '#991b1b';
+        countSpan.textContent = 'No available copies for this book!';
+    } else {
+        copySelect.innerHTML = '<option value="">-- Select Copy --</option>';
+        filtered.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.copyNumber + ' — ' + c.bookTitle;
+            copySelect.appendChild(opt);
+        });
+        infoDiv.style.display = 'block';
+        infoDiv.style.background = '#f0fdf4';
+        infoDiv.style.color = '#166534';
+        countSpan.textContent = filtered.length + ' available cop' + (filtered.length === 1 ? 'y' : 'ies') + ' for this book';
+    }
+}
+
+// Filter students by grade and stream ✅
+function filterStudents() {
+    var gradeFilter = document.getElementById('grade_filter').value;
+    var streamFilter = document.getElementById('stream_filter').value;
+    var studentSelect = document.getElementById('student_select');
+    var countP = document.getElementById('student_count');
+
+    // Clear and rebuild
+    studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+
+    var filtered = allStudents.filter(function(s) {
+        var gradeMatch = gradeFilter === '' || s.grade === gradeFilter;
+        var streamMatch = streamFilter === '' || s.stream === streamFilter;
+        return gradeMatch && streamMatch;
+    });
+
+    filtered.forEach(function(s) {
+        var opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name + ' — Adm: ' + s.adm + ' | Grade ' + s.grade + s.stream;
+        studentSelect.appendChild(opt);
+    });
+
+    if (gradeFilter || streamFilter) {
+        countP.textContent = filtered.length + ' student(s) found';
+        countP.style.color = filtered.length > 0 ? '#166534' : '#991b1b';
+    } else {
+        countP.textContent = '';
+    }
+}
 </script>
 
 {% endblock %}

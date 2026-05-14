@@ -7,11 +7,13 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
+
+    /* ✅ FIX: Sidebar stays RED not green */
     .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
-    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #065f46; background: #111827; }
+    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
     .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
-    .nav-link:hover { background: #111827; color: #34d399; padding-left: 35px; }
-    .nav-link i { margin-right: 12px; color: #34d399; width: 20px; text-align: center; }
+    .nav-link:hover { background: #111827; color: #f87171; padding-left: 35px; }
+    .nav-link i { margin-right: 12px; color: #991b1b; width: 20px; text-align: center; }
     .main-content { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
     .top-bar { background: #fff; padding: 0 45px; height: 70px; display: flex; justify-content: flex-end; align-items: center; gap: 35px; border-bottom: 1px solid #e5e7eb; }
     .top-bar a { color: #4b5563; text-decoration: none; font-size: 13px; font-weight: 700; }
@@ -21,7 +23,7 @@
 <body>
 <div class="sidebar">
     <div class="sidebar-header">
-        <div style="font-weight: 900; color: #34d399; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <div style="font-weight: 900; color: #991b1b; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
         <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Teacher Portal</div>
         <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
     </div>
@@ -39,7 +41,7 @@
         <a href="{% url 'teacher_logout' %}" style="color: #991b1b;">LOGOUT</a>
     </div>
     <div class="content-body">
-        <h2 style="color: #065f46; margin-bottom: 25px;">MY PROFILE</h2>
+        <h2 style="color: #991b1b; margin-bottom: 25px;">MY PROFILE</h2>
 
         {% if error %}
         <div style="background: #fee2e2; color: #991b1b; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
@@ -60,11 +62,11 @@
             <!-- Profile Info -->
             <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex: 1; min-width: 280px;">
                 <div style="text-align: center; margin-bottom: 25px;">
-                    <div style="width: 80px; height: 80px; background: #065f46; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <div style="width: 80px; height: 80px; background: #991b1b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                         <i class="fas fa-chalkboard-teacher" style="font-size: 35px; color: white;"></i>
                     </div>
                     <h3 style="color: #1f2937; font-size: 18px;">{{ teacher.first_name }} {{ teacher.last_name }}</h3>
-                    <p style="color: #065f46; font-weight: bold; font-size: 13px;">Teacher</p>
+                    <p style="color: #991b1b; font-weight: bold; font-size: 13px;">Teacher</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
                     <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
@@ -88,7 +90,7 @@
 
             <!-- Edit Form -->
             <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex: 1.5; min-width: 300px;">
-                <h4 style="color: #1f2937; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #065f46; padding-bottom: 10px;">
+                <h4 style="color: #1f2937; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #991b1b; padding-bottom: 10px;">
                     <i class="fas fa-edit"></i> Edit Profile
                 </h4>
                 <form method="post">
@@ -106,13 +108,22 @@
                         </div>
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL</label>
+                            <!-- ✅ Email must end with .com -->
                             <input type="email" name="email" value="{{ teacher.email }}"
+                                pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
+                                title="Email must end with .com e.g. john@gmail.com"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                         </div>
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PHONE NUMBER</label>
+                            <!-- ✅ Phone must be exactly 10 digits -->
                             <input type="text" name="phone_number" value="{{ teacher.phone_number }}"
+                                maxlength="10"
+                                pattern="\d{10}"
+                                title="Phone number must be exactly 10 digits e.g. 0712345678"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits e.g. 0712345678</small>
                         </div>
                         <div style="border-top: 1px solid #e5e7eb; padding-top: 15px;">
                             <h5 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 12px;">Change Password (optional)</h5>
@@ -128,7 +139,7 @@
                             </div>
                         </div>
                         <button type="submit"
-                            style="background: #065f46; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                            style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
                             <i class="fas fa-save"></i> SAVE CHANGES
                         </button>
                     </div>

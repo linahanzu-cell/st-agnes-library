@@ -34,23 +34,21 @@
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">CATEGORY</label>
                     <select name="category" required style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                        <option value="Textbook" {% if book.category == "Textbook" %}selected{% endif %}>Textbook</option>
-                        <option value="Novel" {% if book.category == "Novel" %}selected{% endif %}>Novel</option>
-                        <option value="Reference" {% if book.category == "Reference" %}selected{% endif %}>Reference</option>
-                        <option value="Revision" {% if book.category == "Revision" %}selected{% endif %}>Revision</option>
-                        <option value="Other" {% if book.category == "Other" %}selected{% endif %}>Other</option>
+                        <option value="textbook" {% if book.category|lower == "textbook" %}selected{% endif %}>Textbook</option>
+                        <option value="novel" {% if book.category|lower == "novel" %}selected{% endif %}>Novel</option>
+                        <option value="reference" {% if book.category|lower == "reference" %}selected{% endif %}>Reference</option>
+                        <option value="storybook" {% if book.category|lower == "storybook" %}selected{% endif %}>Story Book</option>
+                        <option value="atlas" {% if book.category|lower == "atlas" %}selected{% endif %}>Atlas</option>
+                        <option value="dictionary" {% if book.category|lower == "dictionary" %}selected{% endif %}>Dictionary</option>
+                        <option value="activity" {% if book.category|lower == "activity" %}selected{% endif %}>Activity Book</option>
+                        <option value="religious" {% if book.category|lower == "religious" %}selected{% endif %}>Religious Book</option>
+                        <option value="science" {% if book.category|lower == "science" %}selected{% endif %}>Science Book</option>
                     </select>
                 </div>
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PUBLISHER</label>
                     <input type="text" name="publisher" value="{{ book.publisher }}" required
-                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">ISBN</label>
-                    <input type="text" name="isbn" value="{{ book.isbn }}" required
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 </div>
 
@@ -67,10 +65,13 @@
                     </select>
                 </div>
 
+                <!-- QUANTITY — type directly, no steppers ✅ -->
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">QUANTITY</label>
-                    <input type="number" name="total_copies" value="{{ book.total_copies }}" required min="1"
-                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    <input type="text" name="total_copies" value="{{ book.total_copies }}" required
+                        inputmode="numeric" pattern="[0-9]*"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;
+                        -moz-appearance: textfield; appearance: textfield;">
                 </div>
 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">

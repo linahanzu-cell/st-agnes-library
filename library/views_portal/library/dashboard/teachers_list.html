@@ -51,13 +51,21 @@
 
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">EMAIL</label>
+            <!-- ✅ Email must end with .com -->
             <input type="email" name="email" required placeholder="e.g. jane@school.com"
+                pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
+                title="Email must end with .com e.g. jane@gmail.com"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 190px;">
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">PHONE NUMBER</label>
+            <!-- ✅ Phone must be exactly 10 digits -->
             <input type="text" name="phone_number" required placeholder="e.g. 0712345678"
+                maxlength="10"
+                pattern="\d{10}"
+                title="Phone number must be exactly 10 digits"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 140px;">
         </div>
 
@@ -98,12 +106,10 @@
                     </span>
                 </td>
                 <td style="text-align: center; white-space: nowrap;">
-                    <!-- Edit -->
                     <a href="{% url 'edit_teacher' teacher.id %}"
                         style="color: #0891b2; font-size: 16px; margin-right: 8px; text-decoration: none;">
                         <i class="fas fa-edit"></i>
                     </a>
-                    <!-- Toggle Active/Inactive -->
                     <form method="post" action="{% url 'toggle_student_status' teacher.id %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" title="Toggle Status"
@@ -112,7 +118,6 @@
                             {% if teacher.status == 'Active' %}Deactivate{% else %}Activate{% endif %}
                         </button>
                     </form>
-                    <!-- Delete -->
                     <form method="post" action="{% url 'delete_teacher' teacher.id %}" style="display: inline;"
                         onsubmit="return confirm('Are you sure you want to delete {{ teacher.first_name }} {{ teacher.last_name }}?')">
                         {% csrf_token %}

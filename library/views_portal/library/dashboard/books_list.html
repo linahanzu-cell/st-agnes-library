@@ -87,10 +87,13 @@
             </select>
         </div>
 
+        <!-- FIXED QUANTITY — type directly ✅ -->
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">QUANTITY</label>
-            <input type="number" name="total_copies" required placeholder="e.g. 40" min="1"
-                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 90px;">
+            <input type="text" name="total_copies" required placeholder="e.g. 145"
+                inputmode="numeric" pattern="[0-9]*"
+                style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 90px;
+                -moz-appearance: textfield; appearance: textfield;">
         </div>
 
         <button type="submit"

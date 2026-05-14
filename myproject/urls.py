@@ -45,6 +45,7 @@ urlpatterns = [
     path('loans/edit/<int:loan_id>/', views.edit_loan, name='edit_loan'),
     path('loans/return/<int:loan_id>/', views.return_book, name='return_book'),
     path('loans/delete/<int:loan_id>/', views.delete_loan, name='delete_loan'),
+    path('fines/mark-paid/<int:loan_id>/', views.mark_fine_paid, name='mark_fine_paid'),  # ✅ NEW
 
     # RESERVATIONS - ADMIN
     path('reservations/', views.reservations_list, name='reservations_list'),

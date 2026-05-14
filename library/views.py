@@ -7,7 +7,7 @@ from django.db.models import Sum, Q
 from django.contrib import messages
 from django.utils import timezone
 from functools import wraps
-from datetime import date
+from datetime import date, datetime
 import pandas as pd
 
 # ============================================================
@@ -54,17 +54,31 @@ def admin_logout(request):
 @login_required
 def home(request):
     active_loans = Loan.objects.filter(date_returned__isnull=True)
-    total_fines = sum(loan.calculate_fine() for loan in active_loans if loan.student)
+
+    active_fines = sum(loan.calculate_fine() for loan in active_loans if loan.student)
+
+    returned_unpaid_fines = Loan.objects.filter(
+        student__isnull=False,
+        date_returned__isnull=False,
+        fine_amount__gt=0,
+        fine_paid=False,
+    ).aggregate(total=Sum('fine_amount'))['total'] or 0
+
+    total_fines = active_fines + returned_unpaid_fines
+
     try:
         available = BookCopy.objects.filter(is_available=True).count()
     except:
         available = 0
+
+    # ✅ FIX: days_overdue is a @property on the model — never assign to it
     overdue_loans = []
     for loan in active_loans:
         if loan.student and loan.calculate_fine() > 0:
-            loan.days_overdue = (timezone.now().date() - loan.date_due).days
             overdue_loans.append(loan)
+
     pending_reservations = Reservation.objects.filter(status='pending').count()
+
     context = {
         'total_finances': total_fines,
         'total_students': Student.objects.count(),
@@ -77,7 +91,7 @@ def home(request):
     return render(request, 'dashboard/main_view.html', context)
 
 # ============================================================
-# ADMIN PROFILE — UPDATED ✅
+# ADMIN PROFILE
 # ============================================================
 
 @login_required
@@ -130,7 +144,6 @@ def students_list(request):
     students = Student.objects.all().order_by('grade', 'stream', 'last_name')
     return render(request, 'dashboard/students_list.html', {'students': students})
 
-# UPDATED ✅
 @login_required
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -192,7 +205,6 @@ def teachers_list(request):
     teachers = Teacher.objects.all().order_by('last_name')
     return render(request, 'dashboard/teachers_list.html', {'teachers': teachers})
 
-# UPDATED ✅
 @login_required
 def edit_teacher(request, teacher_id):
     teacher = get_object_or_404(Teacher, id=teacher_id)
@@ -245,13 +257,26 @@ def books_list(request):
         if not all([title, author, subject, category, publisher, grade]):
             messages.error(request, "All fields are required.")
         else:
-            Book.objects.create(
-                title=title, author=author, subject=subject, category=category,
-                publisher=publisher, grade=grade, total_copies=int(total_copies),
-            )
-            messages.success(request, f"Book '{title}' added successfully!")
+            existing = Book.objects.filter(
+                title__iexact=title,
+                grade__iexact=grade
+            ).first()
+            if existing:
+                existing.total_copies = int(total_copies)
+                existing.author = author
+                existing.subject = subject
+                existing.category = category
+                existing.publisher = publisher
+                existing.save()
+                messages.success(request, f"Book '{title}' already exists — updated to {total_copies} copies!")
+            else:
+                Book.objects.create(
+                    title=title, author=author, subject=subject, category=category,
+                    publisher=publisher, grade=grade, total_copies=int(total_copies),
+                )
+                messages.success(request, f"Book '{title}' added successfully!")
         return redirect('books_list')
-    books = Book.objects.all().order_by('grade', 'subject', 'title')
+    books = Book.objects.all().order_by('book_id')
     book_data = []
     for book in books:
         try:
@@ -297,6 +322,13 @@ def upload_excel(request):
         try:
             df = pd.read_excel(file)
             df.columns = df.columns.str.strip().str.lower()
+            df.rename(columns={
+                'book name': 'title',
+                'book_name': 'title',
+                'quantity': 'total_copies',
+                'qty': 'total_copies',
+            }, inplace=True)
+
             if 'admission_number' in df.columns:
                 required = ['first_name', 'last_name', 'admission_number', 'grade', 'stream']
                 missing = [c for c in required if c not in df.columns]
@@ -312,13 +344,14 @@ def upload_excel(request):
                         defaults={
                             'first_name': str(row['first_name']).strip(),
                             'last_name': str(row['last_name']).strip(),
-                            'grade': str(int(row['grade'])),
+                            'grade': str(int(float(str(row['grade'])))),
                             'stream': str(row['stream']).strip().upper(),
                         }
                     )
                     count += 1
                 messages.success(request, f"{count} students imported successfully.")
                 return redirect('students_list')
+
             elif 'teacher_id' in df.columns:
                 required = ['first_name', 'last_name', 'teacher_id', 'email', 'phone_number']
                 missing = [c for c in required if c not in df.columns]
@@ -341,6 +374,7 @@ def upload_excel(request):
                     count += 1
                 messages.success(request, f"{count} teachers imported successfully.")
                 return redirect('teachers_list')
+
             elif 'title' in df.columns:
                 required = ['title', 'author', 'subject', 'category', 'publisher', 'grade', 'total_copies']
                 missing = [c for c in required if c not in df.columns]
@@ -351,20 +385,32 @@ def upload_excel(request):
                 for _, row in df.iterrows():
                     if pd.isna(row['title']):
                         continue
-                    Book.objects.create(
+                    raw_grade = str(row['grade']).strip()
+                    raw_grade = raw_grade.replace('Grade ', '').replace('grade ', '').strip()
+                    try:
+                        raw_grade = str(int(float(raw_grade)))
+                    except:
+                        raw_grade = raw_grade.capitalize()
+                    try:
+                        copies = int(float(str(row['total_copies'])))
+                    except:
+                        copies = 1
+                    Book.objects.update_or_create(
                         title=str(row['title']).strip(),
-                        author=str(row['author']).strip(),
-                        subject=str(row['subject']).strip(),
-                        category=str(row['category']).strip(),
-                        publisher=str(row['publisher']).strip(),
-                        grade=str(row['grade']).strip(),
-                        total_copies=int(row['total_copies']),
+                        grade=raw_grade,
+                        defaults={
+                            'author': str(row['author']).strip(),
+                            'subject': str(row['subject']).strip(),
+                            'category': str(row['category']).strip().lower(),
+                            'publisher': str(row['publisher']).strip(),
+                            'total_copies': copies,
+                        }
                     )
                     count += 1
-                messages.success(request, f"{count} books imported successfully.")
+                messages.success(request, f"{count} books imported/updated successfully.")
                 return redirect('books_list')
             else:
-                messages.error(request, "Could not detect file type.")
+                messages.error(request, "Could not detect file type. Check your column names.")
         except Exception as e:
             messages.error(request, f"Error reading file: {str(e)}")
     return redirect('books_list')
@@ -376,6 +422,7 @@ def upload_excel(request):
 @login_required
 def reports_view(request, report_type):
     context = {'report_type': report_type}
+
     if report_type == 'available_books':
         books = Book.objects.all()
         book_data = []
@@ -386,19 +433,148 @@ def reports_view(request, report_type):
                 available = 0
             book_data.append({'book': book, 'available': available})
         context['book_data'] = book_data
+
     elif report_type == 'issued_books':
-        context['loans'] = Loan.objects.all().select_related(
+        loans = Loan.objects.all().select_related(
             'book', 'student', 'teacher'
         ).order_by('-date_borrowed')
+        search_book = request.GET.get('search_book', '').strip()
+        borrower_type = request.GET.get('borrower_type', '').strip()
+        grade_filter = request.GET.get('grade', '').strip()
+        start_date = request.GET.get('start_date', '').strip()
+        end_date = request.GET.get('end_date', '').strip()
+        status_filter = request.GET.get('status', '').strip()
+        if search_book:
+            loans = loans.filter(book__title__icontains=search_book)
+        if borrower_type == 'student':
+            loans = loans.filter(student__isnull=False, teacher__isnull=True)
+        elif borrower_type == 'teacher':
+            loans = loans.filter(teacher__isnull=False, student__isnull=True)
+        if grade_filter:
+            loans = loans.filter(
+                Q(student__grade=grade_filter) | Q(book__grade=grade_filter)
+            )
+        if start_date:
+            loans = loans.filter(date_borrowed__gte=start_date)
+        if end_date:
+            loans = loans.filter(date_borrowed__lte=end_date)
+        if status_filter == 'issued':
+            loans = loans.filter(date_returned__isnull=True)
+        elif status_filter == 'returned':
+            loans = loans.filter(date_returned__isnull=False)
+        context['loans'] = loans
+        context['search_book'] = search_book
+        context['borrower_type'] = borrower_type
+        context['grade_filter'] = grade_filter
+        context['start_date'] = start_date
+        context['end_date'] = end_date
+        context['status_filter'] = status_filter
+        context['total_results'] = loans.count()
+
     elif report_type == 'student_report':
         context['loans'] = Loan.objects.filter(
             student__isnull=False
         ).select_related('student', 'book').order_by('-date_borrowed')
+
     elif report_type == 'teacher_report':
         context['loans'] = Loan.objects.filter(
             teacher__isnull=False
         ).select_related('teacher', 'book').order_by('-date_borrowed')
+
+    elif report_type == 'fines_report':
+        grade_filter = request.GET.get('grade', '').strip()
+        stream_filter = request.GET.get('stream', '').strip()
+        month_filter = request.GET.get('month', '').strip()
+        year_filter = request.GET.get('year', '').strip()
+        paid_filter = request.GET.get('paid_status', '').strip()
+
+        active_loans = Loan.objects.filter(
+            student__isnull=False,
+            date_returned__isnull=True,
+            fine_paid=False,
+        ).select_related('student', 'book').order_by('student__last_name')
+
+        returned_unpaid = Loan.objects.filter(
+            student__isnull=False,
+            date_returned__isnull=False,
+            fine_amount__gt=0,
+            fine_paid=False,
+        ).select_related('student', 'book').order_by('student__last_name')
+
+        paid_fines = Loan.objects.filter(
+            student__isnull=False,
+            fine_paid=True,
+        ).select_related('student', 'book').order_by('-fine_paid_date')
+
+        if grade_filter:
+            active_loans = active_loans.filter(student__grade=grade_filter)
+            returned_unpaid = returned_unpaid.filter(student__grade=grade_filter)
+            paid_fines = paid_fines.filter(student__grade=grade_filter)
+        if stream_filter:
+            active_loans = active_loans.filter(student__stream=stream_filter)
+            returned_unpaid = returned_unpaid.filter(student__stream=stream_filter)
+            paid_fines = paid_fines.filter(student__stream=stream_filter)
+        if month_filter:
+            active_loans = active_loans.filter(date_borrowed__month=month_filter)
+            returned_unpaid = returned_unpaid.filter(date_borrowed__month=month_filter)
+            paid_fines = paid_fines.filter(date_borrowed__month=month_filter)
+        if year_filter:
+            active_loans = active_loans.filter(date_borrowed__year=year_filter)
+            returned_unpaid = returned_unpaid.filter(date_borrowed__year=year_filter)
+            paid_fines = paid_fines.filter(date_borrowed__year=year_filter)
+
+        active_fines_data = []
+        for loan in active_loans:
+            fine = loan.calculate_fine()
+            if fine > 0:
+                active_fines_data.append({
+                    'loan': loan,
+                    'fine': fine,
+                    'days_overdue': loan.days_overdue,
+                    'status': 'Active Loan',
+                })
+        for loan in returned_unpaid:
+            active_fines_data.append({
+                'loan': loan,
+                'fine': loan.fine_amount,
+                'days_overdue': 0,
+                'status': 'Book Returned',
+            })
+
+        total_unpaid = sum(item['fine'] for item in active_fines_data)
+        total_paid = paid_fines.aggregate(total=Sum('fine_amount'))['total'] or 0
+
+        context['fines_data'] = active_fines_data
+        context['paid_fines'] = paid_fines
+        context['total_unpaid'] = total_unpaid
+        context['total_paid'] = total_paid
+        context['grade_filter'] = grade_filter
+        context['stream_filter'] = stream_filter
+        context['month_filter'] = month_filter
+        context['year_filter'] = year_filter
+        context['paid_filter'] = paid_filter
+
     return render(request, 'dashboard/reports.html', context)
+
+# ============================================================
+# MARK FINE AS PAID
+# ============================================================
+
+@login_required
+def mark_fine_paid(request, loan_id):
+    loan = get_object_or_404(Loan, id=loan_id)
+    if request.method == 'POST':
+        if loan.fine_amount == 0:
+            loan.fine_amount = loan.calculate_fine()
+        loan.fine_paid = True
+        loan.fine_paid_date = timezone.now().date()
+        loan.save()
+        name = f"{loan.student.first_name} {loan.student.last_name}"
+        messages.success(
+            request,
+            f"Fine of KSH {loan.fine_amount} for {name} marked as PAID! ✅"
+        )
+    return redirect(request.META.get('HTTP_REFERER', '/reports/fines_report/'))
 
 @login_required
 def toggle_status(request, person_type, person_id):
@@ -426,6 +602,7 @@ def loans_list(request):
     return render(request, 'dashboard/loans_list.html', {
         'active_loans': active_loans,
         'returned_loans': returned_loans,
+        'today': date.today(),
     })
 
 @login_required
@@ -437,9 +614,26 @@ def issue_book(request):
         teacher_id = request.POST.get('teacher')
         date_due = request.POST.get('date_due')
         borrower_type = request.POST.get('borrower_type')
+
         if not book_id or not date_due:
             messages.error(request, "Book and due date are required.")
             return redirect('issue_book')
+
+        # ✅ FIX: Validate due date is not before today
+        try:
+            date_due_parsed = datetime.strptime(date_due, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "❌ Invalid date format. Please use the date picker.")
+            return redirect('issue_book')
+
+        if date_due_parsed < date.today():
+            messages.error(
+                request,
+                f"❌ Due date ({date_due_parsed}) cannot be before today ({date.today()})! "
+                f"Please select today or a future date."
+            )
+            return redirect('issue_book')
+
         book = get_object_or_404(Book, id=book_id)
         copy = None
         if copy_id:
@@ -447,6 +641,7 @@ def issue_book(request):
             if not copy.is_available:
                 messages.error(request, f"Copy {copy.copy_number} is not available.")
                 return redirect('issue_book')
+
         if borrower_type == 'student' and student_id:
             student = get_object_or_404(Student, id=student_id)
             if Loan.objects.filter(
@@ -477,7 +672,8 @@ def issue_book(request):
             messages.error(request, "Please select a student or teacher.")
             return redirect('issue_book')
         return redirect('loans_list')
-    books = Book.objects.all().order_by('title')
+
+    books = Book.objects.all().order_by('book_id')
     students = Student.objects.filter(status='Active').order_by('last_name')
     teachers = Teacher.objects.filter(status='Active').order_by('last_name')
     copies = BookCopy.objects.filter(
@@ -495,9 +691,23 @@ def issue_book(request):
 def edit_loan(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     if request.method == 'POST':
-        loan.date_due = request.POST.get('date_due')
+        new_due_date_str = request.POST.get('date_due', '').strip()
+        try:
+            new_due_date = datetime.strptime(new_due_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "❌ Invalid date format. Please use the date picker.")
+            return render(request, 'dashboard/edit_loan.html', {'loan': loan})
+
+        if new_due_date < loan.date_borrowed:
+            messages.error(
+                request,
+                f"❌ Due date ({new_due_date}) cannot be before the borrowing date ({loan.date_borrowed})!"
+            )
+            return render(request, 'dashboard/edit_loan.html', {'loan': loan})
+
+        loan.date_due = new_due_date
         loan.save()
-        messages.success(request, "Loan updated successfully!")
+        messages.success(request, "Loan due date updated successfully!")
         return redirect('loans_list')
     return render(request, 'dashboard/edit_loan.html', {'loan': loan})
 
@@ -505,22 +715,51 @@ def edit_loan(request, loan_id):
 def return_book(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     if request.method == 'POST':
+        return_date_str = request.POST.get('return_date', '').strip()
+
+        if return_date_str:
+            try:
+                return_date = datetime.strptime(return_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, "❌ Invalid date format. Please use the date picker.")
+                return redirect('loans_list')
+
+            if return_date < loan.date_borrowed:
+                messages.error(
+                    request,
+                    f"❌ Return date ({return_date}) cannot be before the borrowing date ({loan.date_borrowed})! Please enter a correct date."
+                )
+                return redirect('loans_list')
+
+            if return_date > timezone.now().date():
+                messages.error(
+                    request,
+                    f"❌ Return date ({return_date}) cannot be in the future!"
+                )
+                return redirect('loans_list')
+        else:
+            return_date = timezone.now().date()
+
         fine = loan.calculate_fine()
         loan.fine_amount = fine
-        loan.date_returned = timezone.now().date()
+        loan.date_returned = return_date
         loan.save()
+
         try:
             if loan.copy:
                 loan.copy.is_available = True
                 loan.copy.save()
         except:
             pass
+
         name = f"{loan.student.first_name} {loan.student.last_name}" if loan.student \
             else f"{loan.teacher.first_name} {loan.teacher.last_name}"
+
         if fine > 0:
-            messages.warning(request, f"'{loan.book.title}' returned by {name}. Fine: KSH {fine}")
+            messages.warning(request, f"'{loan.book.title}' returned by {name}. Fine: KSH {fine} — Please collect payment.")
         else:
             messages.success(request, f"'{loan.book.title}' returned by {name} successfully!")
+
     return redirect('loans_list')
 
 @login_required

@@ -39,14 +39,23 @@
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL</label>
+                    <!-- ✅ Email must end with .com -->
                     <input type="email" name="email" value="{{ teacher.email }}" required
+                        pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
+                        title="Email must end with .com e.g. john@gmail.com"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 </div>
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PHONE NUMBER</label>
+                    <!-- ✅ Phone must be exactly 10 digits -->
                     <input type="text" name="phone_number" value="{{ teacher.phone_number }}" required
+                        maxlength="10"
+                        pattern="\d{10}"
+                        title="Phone number must be exactly 10 digits e.g. 0712345678"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits e.g. 0712345678</small>
                 </div>
 
                 <!-- Reset Password Section -->

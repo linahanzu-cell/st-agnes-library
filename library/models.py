@@ -74,10 +74,8 @@ class Book(models.Model):
             except Book.DoesNotExist:
                 old_total = 0
         if not self.book_id:
-            # Generate next sequential book ID
             count = Book.objects.count() + 1
             self.book_id = f"BK-{count:04d}"
-            # Ensure uniqueness
             while Book.objects.filter(book_id=self.book_id).exists():
                 count += 1
                 self.book_id = f"BK-{count:04d}"
@@ -112,8 +110,12 @@ class Loan(models.Model):
     date_returned = models.DateField(null=True, blank=True)
     quantity = models.IntegerField(default=1)
     fine_amount = models.IntegerField(default=0)
+    fine_paid = models.BooleanField(default=False)        # ✅ NEW
+    fine_paid_date = models.DateField(null=True, blank=True)  # ✅ NEW
 
     def calculate_fine(self):
+        if self.fine_paid:
+            return 0
         if not self.date_returned and timezone.now().date() > self.date_due:
             days_late = (timezone.now().date() - self.date_due).days
             return days_late * 50
