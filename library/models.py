@@ -2,6 +2,36 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password as django_check_password
 
+SUBJECT_CHOICES = [
+    ('', '-- Select Subject --'),
+    ('Mathematics', 'Mathematics'),
+    ('English', 'English'),
+    ('Literature in English', 'Literature in English'),
+    ('Kiswahili', 'Kiswahili'),
+    ('Biology', 'Biology'),
+    ('Chemistry', 'Chemistry'),
+    ('Physics', 'Physics'),
+    ('History & Government', 'History & Government'),
+    ('Geography', 'Geography'),
+    ('Christian Religious Education (CRE)', 'Christian Religious Education (CRE)'),
+    ('Islamic Religious Education (IRE)', 'Islamic Religious Education (IRE)'),
+    ('Business Studies', 'Business Studies'),
+    ('Agriculture', 'Agriculture'),
+    ('Home Science', 'Home Science'),
+    ('Computer Studies', 'Computer Studies'),
+    ('Art & Design', 'Art & Design'),
+    ('Music', 'Music'),
+    ('Woodwork (Wood Technology)', 'Woodwork (Wood Technology)'),
+    ('Metal Work (Metal Technology)', 'Metal Work (Metal Technology)'),
+    ('Building & Construction', 'Building & Construction'),
+    ('Drawing & Design', 'Drawing & Design'),
+    ('Electricity', 'Electricity'),
+    ('French', 'French'),
+    ('German', 'German'),
+    ('Arabic', 'Arabic'),
+    ('Physical Education (PE)', 'Physical Education (PE)'),
+]
+
 class Student(models.Model):
     STATUS_CHOICES = [('Active', 'Active'), ('Inactive', 'Inactive')]
     first_name = models.CharField(max_length=100)
@@ -30,6 +60,9 @@ class Teacher(models.Model):
     email = models.EmailField()
     phone_number = models.CharField(max_length=20)
     department = models.CharField(max_length=100, blank=True, default='')
+    # ✅ NEW: Teaching subjects
+    subject1 = models.CharField(max_length=100, blank=True, default='', choices=SUBJECT_CHOICES)
+    subject2 = models.CharField(max_length=100, blank=True, default='', choices=SUBJECT_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
     password = models.CharField(max_length=255, blank=True, default='')
     is_first_login = models.BooleanField(default=True)
@@ -110,8 +143,8 @@ class Loan(models.Model):
     date_returned = models.DateField(null=True, blank=True)
     quantity = models.IntegerField(default=1)
     fine_amount = models.IntegerField(default=0)
-    fine_paid = models.BooleanField(default=False)        # ✅ NEW
-    fine_paid_date = models.DateField(null=True, blank=True)  # ✅ NEW
+    fine_paid = models.BooleanField(default=False)
+    fine_paid_date = models.DateField(null=True, blank=True)
 
     def calculate_fine(self):
         if self.fine_paid:

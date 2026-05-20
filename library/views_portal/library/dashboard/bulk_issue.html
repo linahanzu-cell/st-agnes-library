@@ -1,0 +1,252 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 12px 20px; margin-bottom: 15px; border-radius: 6px;
+            background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
+            color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
+            font-weight: bold; font-size: 13px; border-left: 4px solid {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};">
+            {% if message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}✅{% endif %}
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h2 style="color: #991b1b;">📚 BULK ISSUE BOOKS TO CLASS</h2>
+    <a href="{% url 'loans_list' %}"
+        style="background: #1f2937; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px;">
+        ← Back to Loans
+    </a>
+</div>
+
+<!-- ── STEP 1: Selection Form ─────────────────────────────── -->
+<div style="background: white; border-radius: 10px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 4px solid #991b1b; margin-bottom: 25px;">
+    <h3 style="color: #991b1b; margin-bottom: 20px; font-size: 14px; text-transform: uppercase;">
+        Step 1 — Select Book, Class & Due Date
+    </h3>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+
+            <!-- Book -->
+            <div style="flex: 2; min-width: 220px;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT BOOK</label>
+                <select name="book_id" required
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">-- Select Book --</option>
+                    {% for book in books %}
+                    <option value="{{ book.id }}"
+                        {% if preview and book.id == book.id %}selected{% endif %}>
+                        {{ book.title }} — {{ book.book_id }} | Grade {{ book.grade }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Grade -->
+            <div style="flex: 1; min-width: 120px;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">GRADE</label>
+                <select name="grade" required
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">--</option>
+                    <option value="7"  {% if grade == "7"  %}selected{% endif %}>Grade 7</option>
+                    <option value="8"  {% if grade == "8"  %}selected{% endif %}>Grade 8</option>
+                    <option value="9"  {% if grade == "9"  %}selected{% endif %}>Grade 9</option>
+                    <option value="10" {% if grade == "10" %}selected{% endif %}>Grade 10</option>
+                    <option value="11" {% if grade == "11" %}selected{% endif %}>Grade 11</option>
+                    <option value="12" {% if grade == "12" %}selected{% endif %}>Grade 12</option>
+                </select>
+            </div>
+
+            <!-- Stream -->
+            <div style="flex: 1; min-width: 120px;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">STREAM</label>
+                <select name="stream" required
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                    <option value="">--</option>
+                    <option value="A" {% if stream == "A" %}selected{% endif %}>Stream A</option>
+                    <option value="B" {% if stream == "B" %}selected{% endif %}>Stream B</option>
+                    <option value="C" {% if stream == "C" %}selected{% endif %}>Stream C</option>
+                    <option value="D" {% if stream == "D" %}selected{% endif %}>Stream D</option>
+                    <option value="E" {% if stream == "E" %}selected{% endif %}>Stream E</option>
+                </select>
+            </div>
+
+            <!-- Due Date -->
+            <div style="flex: 1; min-width: 160px;">
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">DUE DATE</label>
+                <input type="date" name="date_due" required min="{{ today }}"
+                    value="{{ date_due }}"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+            </div>
+
+            <!-- Preview Button -->
+            <button type="submit" name="action" value="preview"
+                style="background: #1d4ed8; color: white; border: none; padding: 11px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; height: 42px;">
+                🔍 PREVIEW ASSIGNMENT
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ── STEP 2: Preview Table ──────────────────────────────── -->
+{% if preview %}
+
+<!-- Summary Cards -->
+<div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="background: #991b1b; color: white; padding: 20px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+        <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Total Students</p>
+        <h3 style="font-size: 30px; font-weight: 900;">{{ total_students }}</h3>
+    </div>
+    <div style="background: #065f46; color: white; padding: 20px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+        <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Will Be Issued</p>
+        <h3 style="font-size: 30px; font-weight: 900;">{{ will_issue|length }}</h3>
+    </div>
+    <div style="background: #1f2937; color: white; padding: 20px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+        <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Copies Available</p>
+        <h3 style="font-size: 30px; font-weight: 900;">{{ copies_available }}</h3>
+    </div>
+    <div style="background: #d97706; color: white; padding: 20px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+        <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">Already Have Book</p>
+        <h3 style="font-size: 30px; font-weight: 900;">{{ already_has|length }}</h3>
+    </div>
+    <div style="background: {% if no_copy %}#991b1b{% else %}#065f46{% endif %}; color: white; padding: 20px 25px; border-radius: 10px; flex: 1; min-width: 150px;">
+        <p style="font-size: 11px; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px;">No Copy Available</p>
+        <h3 style="font-size: 30px; font-weight: 900;">{{ no_copy|length }}</h3>
+    </div>
+</div>
+
+{% if no_copy %}
+<div style="background: #fef3c7; border: 2px solid #d97706; border-radius: 8px; padding: 12px 20px; margin-bottom: 20px; font-size: 13px; color: #92400e; font-weight: bold;">
+    ⚠️ Not enough copies! Only {{ copies_available }} copies available for {{ total_students }} students.
+    The first {{ will_issue|length }} students (by admission number) will receive books.
+    {{ no_copy|length }} student(s) will be skipped — restock and run bulk issue again for the rest.
+</div>
+{% endif %}
+
+<!-- Assignment Table -->
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+    <div style="background: #065f46; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            ✅ Will Be Issued — {{ book.title }} | Grade {{ grade }}{{ stream }} | Due: {{ date_due }}
+        </h3>
+    </div>
+    <div style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #065f46;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">#</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">STUDENT NAME</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">ADM NO</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">GRADE</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">COPY ASSIGNED</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in will_issue %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; color: #6b7280;">{{ forloop.counter }}</td>
+                <td style="padding: 12px 15px; font-weight: 600;">{{ item.student.first_name }} {{ item.student.last_name }}</td>
+                <td style="padding: 12px 15px; color: #991b1b; font-weight: bold;">{{ item.student.admission_number }}</td>
+                <td style="padding: 12px 15px;">Grade {{ item.student.grade }}{{ item.student.stream }}</td>
+                <td style="padding: 12px 15px;">
+                    <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        {{ item.copy.copy_number }}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 30px; text-align: center; color: #9ca3af;">No students to issue to.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Skipped — already have book -->
+{% if already_has %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+    <div style="background: #d97706; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            ⏭ Skipped — Already Have This Book ({{ already_has|length }})
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #d97706;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">STUDENT NAME</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">ADM NO</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">REASON</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in already_has %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">{{ student.first_name }} {{ student.last_name }}</td>
+                <td style="padding: 12px 15px; color: #991b1b;">{{ student.admission_number }}</td>
+                <td style="padding: 12px 15px;">
+                    <span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">Already has this book</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Skipped — no copies -->
+{% if no_copy %}
+<div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px;">
+    <div style="background: #1f2937; padding: 15px 20px;">
+        <h3 style="color: white; margin: 0; font-size: 14px; text-transform: uppercase;">
+            ❌ No Copy Available — Will Be Issued After Restock ({{ no_copy|length }})
+        </h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">STUDENT NAME</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">ADM NO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in no_copy %}
+            <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px 15px; font-weight: 600;">{{ student.first_name }} {{ student.last_name }}</td>
+                <td style="padding: 12px 15px; color: #991b1b;">{{ student.admission_number }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Confirm Button -->
+{% if will_issue %}
+<div style="background: #dcfce7; border: 2px solid #166534; border-radius: 10px; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <p style="font-weight: bold; color: #166534; font-size: 15px; margin-bottom: 4px;">
+            Ready to issue {{ book.title }} to {{ will_issue|length }} student(s) in Grade {{ grade }}{{ stream }}?
+        </p>
+        <p style="color: #166534; font-size: 13px;">Due date: {{ date_due }} — This cannot be undone.</p>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="book_id" value="{{ book.id }}">
+        <input type="hidden" name="grade" value="{{ grade }}">
+        <input type="hidden" name="stream" value="{{ stream }}">
+        <input type="hidden" name="date_due" value="{{ date_due }}">
+        <button type="submit" name="action" value="confirm"
+            style="background: #065f46; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px;">
+            ✅ CONFIRM — ISSUE TO ALL {{ will_issue|length }} STUDENTS
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

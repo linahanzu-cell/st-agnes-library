@@ -12,7 +12,6 @@
     {% endfor %}
 {% endif %}
 
-<!-- Header + Excel Import -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
     <h2 style="color: #1f2937;">TEACHER REGISTRY</h2>
     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px dashed #991b1b; display: flex; align-items: center; gap: 15px;">
@@ -30,43 +29,104 @@
     <h3 style="margin: 0 0 15px 0; color: #991b1b; font-size: 14px;">+ ADD NEW TEACHER</h3>
     <form method="post" action="{% url 'teachers_list' %}" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
         {% csrf_token %}
-
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">FIRST NAME</label>
             <input type="text" name="first_name" required placeholder="e.g. Jane"
+                pattern="[A-Za-z\s]+" title="Letters only"
+                oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">LAST NAME</label>
             <input type="text" name="last_name" required placeholder="e.g. Wanjiku"
+                pattern="[A-Za-z\s]+" title="Letters only"
+                oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 130px;">
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">TEACHER ID</label>
             <input type="text" name="teacher_id" required placeholder="e.g. T001"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 110px;">
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">EMAIL</label>
-            <!-- ✅ Email must end with .com -->
             <input type="email" name="email" required placeholder="e.g. jane@school.com"
                 pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
-                title="Email must end with .com e.g. jane@gmail.com"
+                title="Email must end with .com"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 190px;">
         </div>
-
         <div style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-size: 11px; font-weight: bold; color: #6b7280;">PHONE NUMBER</label>
-            <!-- ✅ Phone must be exactly 10 digits -->
             <input type="text" name="phone_number" required placeholder="e.g. 0712345678"
-                maxlength="10"
-                pattern="\d{10}"
-                title="Phone number must be exactly 10 digits"
-                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+                maxlength="10" pattern="\d{10}" title="Exactly 10 digits"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
                 style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 140px;">
+        </div>
+
+        <!-- SUBJECT FIELDS -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">SUBJECT 1</label>
+            <select name="subject1" style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 200px;">
+                <option value="">-- Select --</option>
+                <option>Mathematics</option>
+                <option>English</option>
+                <option>Literature in English</option>
+                <option>Kiswahili</option>
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Physics</option>
+                <option>History & Government</option>
+                <option>Geography</option>
+                <option>Christian Religious Education (CRE)</option>
+                <option>Islamic Religious Education (IRE)</option>
+                <option>Business Studies</option>
+                <option>Agriculture</option>
+                <option>Home Science</option>
+                <option>Computer Studies</option>
+                <option>Art & Design</option>
+                <option>Music</option>
+                <option>Woodwork (Wood Technology)</option>
+                <option>Metal Work (Metal Technology)</option>
+                <option>Building & Construction</option>
+                <option>Drawing & Design</option>
+                <option>Electricity</option>
+                <option>French</option>
+                <option>German</option>
+                <option>Arabic</option>
+                <option>Physical Education (PE)</option>
+            </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: bold; color: #6b7280;">SUBJECT 2</label>
+            <select name="subject2" style="padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 200px;">
+                <option value="">-- Optional --</option>
+                <option>Mathematics</option>
+                <option>English</option>
+                <option>Literature in English</option>
+                <option>Kiswahili</option>
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Physics</option>
+                <option>History & Government</option>
+                <option>Geography</option>
+                <option>Christian Religious Education (CRE)</option>
+                <option>Islamic Religious Education (IRE)</option>
+                <option>Business Studies</option>
+                <option>Agriculture</option>
+                <option>Home Science</option>
+                <option>Computer Studies</option>
+                <option>Art & Design</option>
+                <option>Music</option>
+                <option>Woodwork (Wood Technology)</option>
+                <option>Metal Work (Metal Technology)</option>
+                <option>Building & Construction</option>
+                <option>Drawing & Design</option>
+                <option>Electricity</option>
+                <option>French</option>
+                <option>German</option>
+                <option>Arabic</option>
+                <option>Physical Education (PE)</option>
+            </select>
         </div>
 
         <button type="submit"
@@ -76,38 +136,59 @@
     </form>
 </div>
 
+<!-- Search Bar -->
+<div style="background: white; border-radius: 10px; padding: 15px 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px;">
+    <i class="fas fa-search" style="color: #991b1b; font-size: 16px;"></i>
+    <input type="text" id="teacherSearch" placeholder="Search by name, teacher ID, email or phone..."
+        oninput="searchTeachers()"
+        style="border: none; outline: none; font-size: 13px; width: 100%; color: #1f2937;">
+    <span id="searchCount" style="font-size: 12px; color: #6b7280; white-space: nowrap;"></span>
+    <button onclick="document.getElementById('teacherSearch').value=''; searchTeachers();"
+        style="background: #f3f4f6; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #6b7280;">
+        Clear
+    </button>
+</div>
+
 <!-- Teacher Table -->
 <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: #374151;">
         <thead>
             <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
-                <th style="padding: 15px; color: #4b5563;">FIRST NAME</th>
-                <th style="color: #4b5563;">LAST NAME</th>
-                <th style="color: #4b5563;">TEACHER ID</th>
-                <th style="color: #4b5563;">EMAIL</th>
-                <th style="color: #4b5563;">PHONE</th>
-                <th style="color: #4b5563;">STATUS</th>
-                <th style="text-align: center; color: #4b5563;">ACTIONS</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">FIRST NAME</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">LAST NAME</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">TEACHER ID</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">EMAIL</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">PHONE</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">SUBJECT 1</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">SUBJECT 2</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em;">STATUS</th>
+                <th style="padding: 12px 15px; font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">ACTIONS</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="teacherBody">
             {% for teacher in teachers %}
-            <tr style="border-bottom: 1px solid #f3f4f6;">
-                <td style="padding: 15px; font-weight: 600;">{{ teacher.first_name }}</td>
-                <td>{{ teacher.last_name }}</td>
-                <td>{{ teacher.teacher_id }}</td>
-                <td>{{ teacher.email }}</td>
-                <td>{{ teacher.phone_number }}</td>
-                <td>
+            <tr style="border-bottom: 1px solid #f3f4f6;"
+                data-name="{{ teacher.first_name|lower }} {{ teacher.last_name|lower }}"
+                data-id="{{ teacher.teacher_id|lower }}"
+                data-email="{{ teacher.email|lower }}"
+                data-phone="{{ teacher.phone_number }}">
+                <td style="padding: 12px 15px; font-size: 13px; font-weight: 600; color: #1f2937;">{{ teacher.first_name }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #374151;">{{ teacher.last_name }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; font-weight: 700; color: #991b1b;">{{ teacher.teacher_id }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #374151;">{{ teacher.email }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #374151;">{{ teacher.phone_number }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #374151;">{{ teacher.subject1|default:"—" }}</td>
+                <td style="padding: 12px 15px; font-size: 13px; color: #374151;">{{ teacher.subject2|default:"—" }}</td>
+                <td style="padding: 12px 15px;">
                     <span style="background: {% if teacher.status == 'Active' %}#dcfce7{% else %}#fee2e2{% endif %};
                         color: {% if teacher.status == 'Active' %}#166534{% else %}#991b1b{% endif %};
                         padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;">
                         {{ teacher.status }}
                     </span>
                 </td>
-                <td style="text-align: center; white-space: nowrap;">
+                <td style="padding: 12px 15px; text-align: center; white-space: nowrap;">
                     <a href="{% url 'edit_teacher' teacher.id %}"
-                        style="color: #0891b2; font-size: 16px; margin-right: 8px; text-decoration: none;">
+                        style="color: #0891b2; font-size: 15px; margin-right: 8px; text-decoration: none;">
                         <i class="fas fa-edit"></i>
                     </a>
                     <form method="post" action="{% url 'toggle_student_status' teacher.id %}" style="display: inline;">
@@ -122,7 +203,7 @@
                         onsubmit="return confirm('Are you sure you want to delete {{ teacher.first_name }} {{ teacher.last_name }}?')">
                         {% csrf_token %}
                         <button type="submit"
-                            style="background: transparent; color: #991b1b; border: none; cursor: pointer; font-size: 16px;">
+                            style="background: transparent; color: #991b1b; border: none; cursor: pointer; font-size: 15px;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -130,7 +211,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" style="padding: 50px; text-align: center; color: #9ca3af;">
+                <td colspan="9" style="padding: 50px; text-align: center; color: #9ca3af; font-size: 13px;">
                     <i class="fas fa-chalkboard-teacher" style="font-size: 40px; display: block; margin-bottom: 10px;"></i>
                     No teachers found. Add a teacher or upload an Excel file to begin.
                 </td>
@@ -138,6 +219,37 @@
             {% endfor %}
         </tbody>
     </table>
+    <div id="noResults" style="display:none; padding: 30px; text-align: center; color: #9ca3af; font-size: 13px;">
+        <i class="fas fa-search" style="font-size: 30px; display: block; margin-bottom: 10px;"></i>
+        No teachers found matching your search.
+    </div>
 </div>
+
+<script>
+function searchTeachers() {
+    var query = document.getElementById('teacherSearch').value.toLowerCase().trim();
+    var rows = document.querySelectorAll('#teacherBody tr');
+    var count = 0;
+    rows.forEach(function(row) {
+        var name = row.getAttribute('data-name') || '';
+        var id = row.getAttribute('data-id') || '';
+        var email = row.getAttribute('data-email') || '';
+        var phone = row.getAttribute('data-phone') || '';
+        var matches = name.includes(query) || id.includes(query) ||
+                      email.includes(query) || phone.includes(query);
+        row.style.display = matches ? '' : 'none';
+        if (matches) count++;
+    });
+    var countEl = document.getElementById('searchCount');
+    var noResults = document.getElementById('noResults');
+    if (query) {
+        countEl.textContent = count + ' result(s)';
+        noResults.style.display = count === 0 ? 'block' : 'none';
+    } else {
+        countEl.textContent = '';
+        noResults.style.display = 'none';
+    }
+}
+</script>
 
 {% endblock %}

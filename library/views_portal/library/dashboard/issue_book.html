@@ -7,9 +7,16 @@
             background: {% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'warning' %}#fef3c7{% else %}#dcfce7{% endif %};
             color: {% if message.tags == 'error' %}#991b1b{% elif message.tags == 'warning' %}#92400e{% else %}#166534{% endif %};
             font-weight: bold; font-size: 13px;">
+            {% if message.tags == 'error' %}❌{% elif message.tags == 'warning' %}⚠️{% else %}✅{% endif %}
             {{ message }}
         </div>
     {% endfor %}
+{% endif %}
+
+{% if prefill_student_id or prefill_teacher_id %}
+<div style="background: #dcfce7; border: 2px solid #166534; border-radius: 8px; padding: 12px 20px; margin-bottom: 20px; font-weight: bold; color: #166534; font-size: 14px;">
+    ✅ Reservation approved! Student/Teacher and Book are pre-filled below. Just set the due date and press ISSUE BOOK.
+</div>
 {% endif %}
 
 <h2 style="color: #991b1b; margin-bottom: 25px;">ISSUE BOOK</h2>
@@ -24,18 +31,20 @@
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 8px;">BORROWER TYPE</label>
                 <div style="display: flex; gap: 20px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; color: #374151;">
-                        <input type="radio" name="borrower_type" value="student" checked onclick="showStudent()"> Student
+                        <input type="radio" name="borrower_type" value="student"
+                            {% if prefill_borrower_type == 'student' or not prefill_borrower_type %}checked{% endif %}
+                            onclick="showStudent()"> Student
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; color: #374151;">
-                        <input type="radio" name="borrower_type" value="teacher" onclick="showTeacher()"> Teacher
+                        <input type="radio" name="borrower_type" value="teacher"
+                            {% if prefill_borrower_type == 'teacher' %}checked{% endif %}
+                            onclick="showTeacher()"> Teacher
                     </label>
                 </div>
             </div>
 
             <!-- Student Section -->
-            <div id="student_div">
-
-                <!-- Grade + Stream Filter -->
+            <div id="student_div" {% if prefill_borrower_type == 'teacher' %}style="display:none;"{% endif %}>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <div style="flex: 1;">
                         <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FILTER BY GRADE</label>
@@ -63,8 +72,6 @@
                         </select>
                     </div>
                 </div>
-
-                <!-- Student Dropdown -->
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT STUDENT</label>
                 <select name="student" id="student_select"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
@@ -72,24 +79,24 @@
                     {% for student in students %}
                     <option value="{{ student.id }}"
                         data-grade="{{ student.grade }}"
-                        data-stream="{{ student.stream }}">
+                        data-stream="{{ student.stream }}"
+                        {% if prefill_student_id == student.id|stringformat:"s" %}selected{% endif %}>
                         {{ student.first_name }} {{ student.last_name }} — Adm: {{ student.admission_number }} | Grade {{ student.grade }}{{ student.stream }}
                     </option>
                     {% endfor %}
                 </select>
-
-                <!-- Student count info -->
                 <p id="student_count" style="font-size: 11px; color: #6b7280; margin-top: 5px;"></p>
             </div>
 
             <!-- Teacher Section -->
-            <div id="teacher_div" style="display: none;">
+            <div id="teacher_div" {% if prefill_borrower_type != 'teacher' %}style="display:none;"{% endif %}>
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT TEACHER</label>
                 <select name="teacher"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Teacher --</option>
                     {% for teacher in teachers %}
-                    <option value="{{ teacher.id }}">
+                    <option value="{{ teacher.id }}"
+                        {% if prefill_teacher_id == teacher.id|stringformat:"s" %}selected{% endif %}>
                         {{ teacher.first_name }} {{ teacher.last_name }} — ID: {{ teacher.teacher_id }}
                     </option>
                     {% endfor %}
@@ -103,39 +110,35 @@
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Book --</option>
                     {% for book in books %}
-                    <option value="{{ book.id }}">
+                    <option value="{{ book.id }}"
+                        {% if prefill_book_id == book.id|stringformat:"s" %}selected{% endif %}>
                         {{ book.title }} — {{ book.book_id }} | Grade {{ book.grade }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Copy Number Select — dynamically filtered ✅ -->
+            <!-- Copy Number -->
             <div>
-                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">
-                    SELECT COPY NUMBER
-                </label>
+                <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">SELECT COPY NUMBER</label>
                 <select name="copy" id="copy_select"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
                     <option value="">-- Select Book First --</option>
                 </select>
-                <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Only available copies are shown
-                </p>
+                <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">Only available copies are shown</p>
             </div>
 
-            <!-- Available copies info -->
             <div id="copies_info" style="display: none; border-radius: 6px; padding: 10px 15px; font-size: 13px; font-weight: bold;">
-                <i class="fas fa-info-circle"></i> <span id="copies_count"></span>
+                <span id="copies_count"></span>
             </div>
 
-            <!-- Return Date -->
+            <!-- ✅ Due Date — min set to today, cannot pick past dates -->
             <div>
                 <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">RETURN DATE (DUE DATE)</label>
-                <input type="date" name="date_due" required min="{{ today }}"
+                <input type="date" name="date_due" id="date_due" required min="{{ today }}"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 <p style="font-size: 11px; color: #9ca3af; margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Select the date the book must be returned
+                    <i class="fas fa-info-circle"></i> Select the date the book must be returned (today or future only)
                 </p>
             </div>
 
@@ -148,63 +151,59 @@
 </div>
 
 <script>
-// All copies data from Django — stored in JS array ✅
-// This avoids the Safari display:none option bug
 var allCopies = [
     {% for copy in copies %}
-    {
-        id: "{{ copy.id }}",
-        bookId: "{{ copy.book.id }}",
-        copyNumber: "{{ copy.copy_number }}",
-        bookTitle: "{{ copy.book.title }}"
-    }{% if not forloop.last %},{% endif %}
+    { id: "{{ copy.id }}", bookId: "{{ copy.book.id }}", copyNumber: "{{ copy.copy_number }}", bookTitle: "{{ copy.book.title }}" }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+var allStudents = [
+    {% for student in students %}
+    { id: "{{ student.id }}", name: "{{ student.first_name }} {{ student.last_name }}", adm: "{{ student.admission_number }}", grade: "{{ student.grade }}", stream: "{{ student.stream }}" }{% if not forloop.last %},{% endif %}
     {% endfor %}
 ];
 
-// All students data for filtering
-var allStudents = [
-    {% for student in students %}
-    {
-        id: "{{ student.id }}",
-        name: "{{ student.first_name }} {{ student.last_name }}",
-        adm: "{{ student.admission_number }}",
-        grade: "{{ student.grade }}",
-        stream: "{{ student.stream }}"
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-];
+// ✅ Set today as minimum date for due date on page load
+document.addEventListener('DOMContentLoaded', function() {
+    var dateInput = document.getElementById('date_due');
+    var today = new Date();
+    var yyyy = today.getFullYear();
+    var mm = String(today.getMonth() + 1).padStart(2, '0');
+    var dd = String(today.getDate()).padStart(2, '0');
+    var todayStr = yyyy + '-' + mm + '-' + dd;
+    dateInput.min = todayStr;
+
+    // Prevent typing past date
+    dateInput.addEventListener('change', function() {
+        if (this.value < todayStr) {
+            this.value = todayStr;
+            this.style.border = '2px solid #991b1b';
+            alert('❌ Due date cannot be before today! Date reset to today.');
+            setTimeout(() => this.style.border = '1px solid #d1d5db', 2000);
+        }
+    });
+});
 
 function showStudent() {
     document.getElementById('student_div').style.display = 'block';
     document.getElementById('teacher_div').style.display = 'none';
 }
-
 function showTeacher() {
     document.getElementById('student_div').style.display = 'none';
     document.getElementById('teacher_div').style.display = 'block';
 }
 
-// Filter copies when book is selected ✅
 function filterCopies() {
     var bookId = document.getElementById('book_select').value;
     var copySelect = document.getElementById('copy_select');
     var infoDiv = document.getElementById('copies_info');
     var countSpan = document.getElementById('copies_count');
-
-    // Clear current options
     copySelect.innerHTML = '';
-
     if (!bookId) {
         copySelect.innerHTML = '<option value="">-- Select Book First --</option>';
         infoDiv.style.display = 'none';
         return;
     }
-
-    // Filter copies for selected book only
-    var filtered = allCopies.filter(function(c) {
-        return c.bookId === bookId;
-    });
-
+    var filtered = allCopies.filter(c => c.bookId === bookId);
     if (filtered.length === 0) {
         copySelect.innerHTML = '<option value="">-- No copies available --</option>';
         infoDiv.style.display = 'block';
@@ -213,7 +212,7 @@ function filterCopies() {
         countSpan.textContent = 'No available copies for this book!';
     } else {
         copySelect.innerHTML = '<option value="">-- Select Copy --</option>';
-        filtered.forEach(function(c) {
+        filtered.forEach(c => {
             var opt = document.createElement('option');
             opt.value = c.id;
             opt.textContent = c.copyNumber + ' — ' + c.bookTitle;
@@ -222,33 +221,30 @@ function filterCopies() {
         infoDiv.style.display = 'block';
         infoDiv.style.background = '#f0fdf4';
         infoDiv.style.color = '#166534';
-        countSpan.textContent = filtered.length + ' available cop' + (filtered.length === 1 ? 'y' : 'ies') + ' for this book';
+        countSpan.textContent = filtered.length + ' available cop' + (filtered.length === 1 ? 'y' : 'ies');
     }
 }
 
-// Filter students by grade and stream ✅
 function filterStudents() {
     var gradeFilter = document.getElementById('grade_filter').value;
     var streamFilter = document.getElementById('stream_filter').value;
     var studentSelect = document.getElementById('student_select');
     var countP = document.getElementById('student_count');
-
-    // Clear and rebuild
+    // ✅ Remember the currently selected student before filtering
+    var currentVal = studentSelect.value;
     studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
-
-    var filtered = allStudents.filter(function(s) {
-        var gradeMatch = gradeFilter === '' || s.grade === gradeFilter;
-        var streamMatch = streamFilter === '' || s.stream === streamFilter;
-        return gradeMatch && streamMatch;
+    var filtered = allStudents.filter(s => {
+        return (gradeFilter === '' || s.grade === gradeFilter) &&
+               (streamFilter === '' || s.stream === streamFilter);
     });
-
-    filtered.forEach(function(s) {
+    filtered.forEach(s => {
         var opt = document.createElement('option');
         opt.value = s.id;
         opt.textContent = s.name + ' — Adm: ' + s.adm + ' | Grade ' + s.grade + s.stream;
+        // ✅ Keep student selected if they match the new filter
+        if (s.id === currentVal) opt.selected = true;
         studentSelect.appendChild(opt);
     });
-
     if (gradeFilter || streamFilter) {
         countP.textContent = filtered.length + ' student(s) found';
         countP.style.color = filtered.length > 0 ? '#166534' : '#991b1b';
@@ -256,6 +252,46 @@ function filterStudents() {
         countP.textContent = '';
     }
 }
+
+// ✅ Auto-trigger copy filter + set grade/stream if pre-filled from reservation
+window.addEventListener('load', function() {
+    var bookSelect = document.getElementById('book_select');
+    if (bookSelect.value) {
+        filterCopies();
+    }
+
+    var prefilledStudentId = "{{ prefill_student_id }}";
+    if (prefilledStudentId) {
+        var matchedStudent = allStudents.find(s => s.id === prefilledStudentId);
+        if (matchedStudent) {
+            // ✅ Set grade filter to student's grade
+            var gradeFilter = document.getElementById('grade_filter');
+            gradeFilter.value = matchedStudent.grade;
+
+            // ✅ Set stream filter to student's stream
+            var streamFilter = document.getElementById('stream_filter');
+            streamFilter.value = matchedStudent.stream;
+
+            // ✅ Rebuild dropdown for that grade/stream with student still selected
+            var studentSelect = document.getElementById('student_select');
+            studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            var filtered = allStudents.filter(s =>
+                s.grade === matchedStudent.grade && s.stream === matchedStudent.stream
+            );
+            filtered.forEach(function(s) {
+                var opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name + ' — Adm: ' + s.adm + ' | Grade ' + s.grade + s.stream;
+                if (s.id === prefilledStudentId) opt.selected = true;
+                studentSelect.appendChild(opt);
+            });
+
+            var countP = document.getElementById('student_count');
+            countP.textContent = filtered.length + ' student(s) in Grade ' + matchedStudent.grade + matchedStudent.stream;
+            countP.style.color = '#166534';
+        }
+    }
+});
 </script>
 
 {% endblock %}

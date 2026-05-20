@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>St. Agnes | Teacher Profile</title>
+{% load static %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
-
-    /* ✅ FIX: Sidebar stays RED not green */
     .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
-    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .sidebar-header { padding: 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
     .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
     .nav-link:hover { background: #111827; color: #f87171; padding-left: 35px; }
     .nav-link i { margin-right: 12px; color: #991b1b; width: 20px; text-align: center; }
@@ -23,9 +22,10 @@
 <body>
 <div class="sidebar">
     <div class="sidebar-header">
-        <div style="font-weight: 900; color: #991b1b; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <img src="{% static 'images/logo.png' %}" style="width: 65px; height: 65px; object-fit: contain; margin-bottom: 8px;" alt="Logo">
+        <div style="font-weight: 900; color: #991b1b; letter-spacing: 2px; font-size: 18px;">ST. AGNES</div>
         <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Teacher Portal</div>
-        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 5px;">{{ teacher.first_name }} {{ teacher.last_name }}</div>
     </div>
     <nav>
         <a href="{% url 'teacher_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
@@ -44,22 +44,17 @@
         <h2 style="color: #991b1b; margin-bottom: 25px;">MY PROFILE</h2>
 
         {% if error %}
-        <div style="background: #fee2e2; color: #991b1b; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
-            {{ error }}
-        </div>
+        <div style="background: #fee2e2; color: #991b1b; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">{{ error }}</div>
         {% endif %}
-
         {% if messages %}
         {% for message in messages %}
-        <div style="background: #dcfce7; color: #166534; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">
-            {{ message }}
-        </div>
+        <div style="background: #dcfce7; color: #166534; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px; font-weight: bold;">{{ message }}</div>
         {% endfor %}
         {% endif %}
 
         <div style="display: flex; gap: 25px; flex-wrap: wrap;">
 
-            <!-- Profile Info -->
+            <!-- Profile Info Card -->
             <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex: 1; min-width: 280px;">
                 <div style="text-align: center; margin-bottom: 25px;">
                     <div style="width: 80px; height: 80px; background: #991b1b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
@@ -81,6 +76,15 @@
                         <span style="color: #6b7280; font-weight: bold;">Phone</span>
                         <span style="color: #1f2937; font-weight: 600;">{{ teacher.phone_number }}</span>
                     </div>
+                    <!-- ✅ Show subjects -->
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Subject 1</span>
+                        <span style="color: #991b1b; font-weight: 600;">{{ teacher.subject1|default:"Not set" }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
+                        <span style="color: #6b7280; font-weight: bold;">Subject 2</span>
+                        <span style="color: #991b1b; font-weight: 600;">{{ teacher.subject2|default:"Not set" }}</span>
+                    </div>
                     <div style="display: flex; justify-content: space-between; padding: 10px; background: #f9fafb; border-radius: 6px;">
                         <span style="color: #6b7280; font-weight: bold;">Status</span>
                         <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;">{{ teacher.status }}</span>
@@ -96,35 +100,69 @@
                 <form method="post">
                     {% csrf_token %}
                     <div style="display: flex; flex-direction: column; gap: 15px;">
+
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FIRST NAME</label>
                             <input type="text" name="first_name" value="{{ teacher.first_name }}"
+                                pattern="[A-Za-z\s]+" title="Letters only — no numbers"
+                                oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                         </div>
+
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">LAST NAME</label>
                             <input type="text" name="last_name" value="{{ teacher.last_name }}"
+                                pattern="[A-Za-z\s]+" title="Letters only — no numbers"
+                                oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                         </div>
+
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL</label>
-                            <!-- ✅ Email must end with .com -->
                             <input type="email" name="email" value="{{ teacher.email }}"
                                 pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
-                                title="Email must end with .com e.g. john@gmail.com"
+                                title="Email must end with .com"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                         </div>
+
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PHONE NUMBER</label>
-                            <!-- ✅ Phone must be exactly 10 digits -->
                             <input type="text" name="phone_number" value="{{ teacher.phone_number }}"
-                                maxlength="10"
-                                pattern="\d{10}"
-                                title="Phone number must be exactly 10 digits e.g. 0712345678"
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+                                maxlength="10" pattern="\d{10}" title="Exactly 10 digits"
+                                oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
                                 style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                            <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits e.g. 0712345678</small>
+                            <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits</small>
                         </div>
+
+                        <!-- ✅ Subject 1 -->
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">TEACHING SUBJECT 1</label>
+                            <select name="subject1"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                                <option value="">-- Select Subject --</option>
+                                {% for value, label in subject_choices %}
+                                {% if value %}
+                                <option value="{{ value }}" {% if teacher.subject1 == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- ✅ Subject 2 -->
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">TEACHING SUBJECT 2</label>
+                            <select name="subject2"
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                                <option value="">-- Select Subject (optional) --</option>
+                                {% for value, label in subject_choices %}
+                                {% if value %}
+                                <option value="{{ value }}" {% if teacher.subject2 == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            <small style="color: #6b7280; font-size: 11px;">Note: English teachers automatically teach Literature in English</small>
+                        </div>
+
                         <div style="border-top: 1px solid #e5e7eb; padding-top: 15px;">
                             <h5 style="color: #6b7280; font-size: 12px; text-transform: uppercase; margin-bottom: 12px;">Change Password (optional)</h5>
                             <div style="margin-bottom: 12px;">
@@ -138,6 +176,7 @@
                                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                             </div>
                         </div>
+
                         <button type="submit"
                             style="background: #991b1b; color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px;">
                             <i class="fas fa-save"></i> SAVE CHANGES

@@ -29,7 +29,7 @@
         </h3>
     </div>
     <div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px;">
         <thead>
             <tr style="background: #f9fafb; border-bottom: 2px solid #991b1b;">
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BORROWER</th>
@@ -39,7 +39,6 @@
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE BORROWED</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DUE DATE</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">FINE</th>
-                <th style="padding: 12px 15px; text-align: center; color: #4b5563;">RETURN DATE</th>
                 <th style="padding: 12px 15px; text-align: center; color: #4b5563;">ACTION</th>
             </tr>
         </thead>
@@ -62,7 +61,7 @@
                     {{ loan.copy.copy_number|default:"N/A" }}
                 </td>
                 <td style="padding: 12px 15px;">{{ loan.date_borrowed }}</td>
-                <td style="padding: 12px 15px; color: #991b1b;">{{ loan.date_due }}</td>
+                <td style="padding: 12px 15px; color: #991b1b; font-weight: bold;">{{ loan.date_due }}</td>
                 <td style="padding: 12px 15px;">
                     {% if loan.student %}
                         {% if loan.calculate_fine > 0 %}
@@ -78,27 +77,16 @@
                         <span style="color: #9ca3af; font-size: 12px;">N/A</span>
                     {% endif %}
                 </td>
-                <!-- ✅ RETURN DATE INPUT -->
-                <td style="padding: 8px 15px; text-align: center;">
+                <td style="padding: 12px 15px; text-align: center; white-space: nowrap;">
+                    <a href="{% url 'edit_loan' loan.id %}"
+                        style="background: #0891b2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; margin-right: 5px; display: inline-block;">
+                        <i class="fas fa-edit"></i> EDIT
+                    </a>
+                    <!-- ✅ Simple RETURN button — uses today automatically -->
                     <form method="post" action="{% url 'return_book' loan.id %}" style="display: inline;"
-                        id="return-form-{{ loan.id }}"
-                        onsubmit="return validateReturn('{{ loan.date_borrowed }}', this)">
+                        onsubmit="return confirm('Return this book today?{% if loan.student %}{% if loan.calculate_fine > 0 %} Fine of KSH {{ loan.calculate_fine }} will be recorded.{% endif %}{% endif %}')">
                         {% csrf_token %}
-                        <input type="date"
-                            name="return_date"
-                            min="{{ loan.date_borrowed }}"
-                            max="{{ today }}"
-                            style="padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; width: 140px;">
-                        <div style="font-size: 10px; color: #6b7280; margin-top: 3px;">
-                            Leave blank for today
-                        </div>
-                </td>
-                <td style="padding: 8px 15px; text-align: center; white-space: nowrap;">
-                        <a href="{% url 'edit_loan' loan.id %}"
-                            style="background: #0891b2; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; margin-right: 5px; display: inline-block; margin-bottom: 4px;">
-                            <i class="fas fa-edit"></i> EDIT
-                        </a>
-                        <button type="submit" form="return-form-{{ loan.id }}"
+                        <button type="submit"
                             style="background: #065f46; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;">
                             <i class="fas fa-undo"></i> RETURN
                         </button>
@@ -107,7 +95,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="9" style="padding: 30px; text-align: center; color: #9ca3af;">
+                <td colspan="8" style="padding: 30px; text-align: center; color: #9ca3af;">
                     No books currently issued.
                 </td>
             </tr>
@@ -125,7 +113,7 @@
         </h3>
     </div>
     <div style="overflow-x: auto;">
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px;">
         <thead>
             <tr style="background: #f9fafb; border-bottom: 2px solid #1f2937;">
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BORROWER</th>
@@ -133,6 +121,7 @@
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">BOOK</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">COPY NO</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE BORROWED</th>
+                <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DUE DATE</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">DATE RETURNED</th>
                 <th style="padding: 12px 15px; text-align: left; color: #4b5563;">FINE</th>
                 <th style="padding: 12px 15px; text-align: center; color: #4b5563;">DELETE</th>
@@ -157,6 +146,8 @@
                     {{ loan.copy.copy_number|default:"N/A" }}
                 </td>
                 <td style="padding: 12px 15px;">{{ loan.date_borrowed }}</td>
+                <!-- ✅ NEW: Due Date column -->
+                <td style="padding: 12px 15px; color: #991b1b; font-weight: bold;">{{ loan.date_due }}</td>
                 <td style="padding: 12px 15px; color: #065f46; font-weight: bold;">{{ loan.date_returned }}</td>
                 <td style="padding: 12px 15px;">
                     {% if loan.student %}
@@ -192,7 +183,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="padding: 30px; text-align: center; color: #9ca3af;">
+                <td colspan="9" style="padding: 30px; text-align: center; color: #9ca3af;">
                     No returned books yet.
                 </td>
             </tr>
@@ -201,37 +192,5 @@
     </table>
     </div>
 </div>
-
-<!-- ✅ JAVASCRIPT VALIDATION -->
-<script>
-function validateReturn(borrowDate, form) {
-    const dateInput = form.querySelector('input[name="return_date"]');
-    const returnDate = dateInput.value;
-
-    // If no date entered, allow — today will be used
-    if (!returnDate) {
-        return confirm('No date selected. Return date will be set to TODAY. Confirm?');
-    }
-
-    const borrowed = new Date(borrowDate);
-    const returned = new Date(returnDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Check return date is not before borrow date
-    if (returned < borrowed) {
-        alert('❌ Return date cannot be before the borrowing date (' + borrowDate + ')!\nPlease select a correct date.');
-        return false;
-    }
-
-    // Check return date is not in the future
-    if (returned > today) {
-        alert('❌ Return date cannot be in the future!\nPlease select today or a past date.');
-        return false;
-    }
-
-    return confirm('Confirm return for this book on ' + returnDate + '?');
-}
-</script>
 
 {% endblock %}

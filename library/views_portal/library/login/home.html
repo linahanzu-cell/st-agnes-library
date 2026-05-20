@@ -29,7 +29,6 @@
         z-index: 0;
     }
     .content { position: relative; z-index: 1; text-align: center; padding: 40px 20px; width: 100%; max-width: 1000px; }
-    .school-icon { font-size: 60px; color: #ef4444; margin-bottom: 15px; display: block; }
     .school-name { font-size: 46px; font-weight: 900; color: white; letter-spacing: 5px; }
     .school-subtitle { font-size: 13px; color: #9ca3af; text-transform: uppercase; letter-spacing: 4px; margin-top: 8px; margin-bottom: 45px; }
     .cards-row { display: flex; gap: 25px; justify-content: center; flex-wrap: wrap; }
@@ -48,40 +47,28 @@
 </head>
 <body>
 <div class="content">
-    <i class="fas fa-book-open school-icon"></i>
+    <!-- ✅ School Logo above name -->
+    <img src="{% static 'images/logo.png' %}" style="width: 110px; height: 110px; object-fit: contain; margin-bottom: 15px;" alt="St Agnes Logo">
     <div class="school-name">ST. AGNES</div>
     <div class="school-subtitle">Shibuya School Library System</div>
-
     <div class="cards-row">
-        <!-- Librarian -->
         <div class="card">
             <i class="fas fa-user-shield card-icon" style="color: #991b1b;"></i>
             <div class="card-title">LIBRARIAN</div>
-            <a href="{% url 'login' %}" class="login-btn btn-librarian">
-                <i class="fas fa-sign-in-alt"></i> LOGIN
-            </a>
+            <a href="{% url 'login' %}" class="login-btn btn-librarian"><i class="fas fa-sign-in-alt"></i> LOGIN</a>
         </div>
-
-        <!-- Student -->
         <div class="card">
             <i class="fas fa-user-graduate card-icon" style="color: #1d4ed8;"></i>
             <div class="card-title">STUDENT</div>
-            <a href="{% url 'student_login' %}" class="login-btn btn-student">
-                <i class="fas fa-sign-in-alt"></i> LOGIN
-            </a>
+            <a href="{% url 'student_login' %}" class="login-btn btn-student"><i class="fas fa-sign-in-alt"></i> LOGIN</a>
         </div>
-
-        <!-- Teacher -->
         <div class="card">
             <i class="fas fa-chalkboard-teacher card-icon" style="color: #065f46;"></i>
             <div class="card-title">TEACHER</div>
-            <a href="{% url 'teacher_login' %}" class="login-btn btn-teacher">
-                <i class="fas fa-sign-in-alt"></i> LOGIN
-            </a>
+            <a href="{% url 'teacher_login' %}" class="login-btn btn-teacher"><i class="fas fa-sign-in-alt"></i> LOGIN</a>
         </div>
     </div>
 </div>
-
 <div class="footer">
     St. Agnes Shibuya School &copy; 2025 &nbsp;|&nbsp; <span>Library Management System</span>
 </div>

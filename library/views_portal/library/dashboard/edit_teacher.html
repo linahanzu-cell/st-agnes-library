@@ -22,12 +22,16 @@
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">FIRST NAME</label>
                     <input type="text" name="first_name" value="{{ teacher.first_name }}" required
+                        pattern="[A-Za-z\s]+" title="Letters only — no numbers"
+                        oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 </div>
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">LAST NAME</label>
                     <input type="text" name="last_name" value="{{ teacher.last_name }}" required
+                        pattern="[A-Za-z\s]+" title="Letters only — no numbers"
+                        oninput="this.value=this.value.replace(/[^A-Za-z\s]/g,'')"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 </div>
 
@@ -39,26 +43,51 @@
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">EMAIL</label>
-                    <!-- ✅ Email must end with .com -->
                     <input type="email" name="email" value="{{ teacher.email }}" required
                         pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.com"
-                        title="Email must end with .com e.g. john@gmail.com"
+                        title="Email must end with .com"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
                 </div>
 
                 <div>
                     <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">PHONE NUMBER</label>
-                    <!-- ✅ Phone must be exactly 10 digits -->
                     <input type="text" name="phone_number" value="{{ teacher.phone_number }}" required
-                        maxlength="10"
-                        pattern="\d{10}"
-                        title="Phone number must be exactly 10 digits e.g. 0712345678"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)"
+                        maxlength="10" pattern="\d{10}" title="Exactly 10 digits"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
                         style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
-                    <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits e.g. 0712345678</small>
+                    <small style="color: #6b7280; font-size: 11px;">Must be exactly 10 digits</small>
                 </div>
 
-                <!-- Reset Password Section -->
+                <!-- ✅ Subject 1 -->
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">TEACHING SUBJECT 1</label>
+                    <select name="subject1"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="">-- Select Subject --</option>
+                        {% for value, label in subject_choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if teacher.subject1 == value %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- ✅ Subject 2 -->
+                <div>
+                    <label style="font-size: 11px; font-weight: bold; color: #6b7280; display: block; margin-bottom: 5px;">TEACHING SUBJECT 2</label>
+                    <select name="subject2"
+                        style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                        <option value="">-- Select Subject (optional) --</option>
+                        {% for value, label in subject_choices %}
+                        {% if value %}
+                        <option value="{{ value }}" {% if teacher.subject2 == value %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    <small style="color: #6b7280; font-size: 11px;">Note: English teachers automatically teach Literature in English</small>
+                </div>
+
+                <!-- Reset Password -->
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 15px; background: #fef9c3; border-radius: 6px; padding: 15px;">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                         <input type="checkbox" name="reset_password"

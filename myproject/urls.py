@@ -42,10 +42,11 @@ urlpatterns = [
     # LOANS - ADMIN
     path('loans/', views.loans_list, name='loans_list'),
     path('loans/issue/', views.issue_book, name='issue_book'),
+    path('loans/bulk-issue/', views.bulk_issue_book, name='bulk_issue_book'),
     path('loans/edit/<int:loan_id>/', views.edit_loan, name='edit_loan'),
     path('loans/return/<int:loan_id>/', views.return_book, name='return_book'),
     path('loans/delete/<int:loan_id>/', views.delete_loan, name='delete_loan'),
-    path('fines/mark-paid/<int:loan_id>/', views.mark_fine_paid, name='mark_fine_paid'),  # ✅ NEW
+    path('fines/mark-paid/<int:loan_id>/', views.mark_fine_paid, name='mark_fine_paid'),  
 
     # RESERVATIONS - ADMIN
     path('reservations/', views.reservations_list, name='reservations_list'),

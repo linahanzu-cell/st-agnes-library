@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>St. Agnes | Student Dashboard</title>
+{% load static %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; display: flex; }
     .sidebar { width: 260px; background: #1f2937; color: #fff; height: 100vh; position: fixed; overflow-y: auto; }
-    .sidebar-header { padding: 30px 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
+    .sidebar-header { padding: 20px; text-align: center; border-bottom: 3px solid #991b1b; background: #111827; }
     .nav-link { padding: 15px 25px; display: block; color: #d1d5db; text-decoration: none; font-size: 14px; border-bottom: 1px solid #374151; transition: 0.3s; }
     .nav-link:hover { background: #111827; color: #ef4444; padding-left: 35px; }
     .nav-link i { margin-right: 12px; color: #ef4444; width: 20px; text-align: center; }
@@ -23,9 +24,11 @@
 <body>
 <div class="sidebar">
     <div class="sidebar-header">
-        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 20px;">ST. AGNES</div>
+        <!-- ✅ School Logo -->
+        <img src="{% static 'images/logo.png' %}" style="width: 65px; height: 65px; object-fit: contain; margin-bottom: 8px;" alt="St Agnes Logo">
+        <div style="font-weight: 900; color: #ef4444; letter-spacing: 2px; font-size: 18px;">ST. AGNES</div>
         <div style="font-size: 10px; color: #9ca3af; text-transform: uppercase;">Student Portal</div>
-        <div style="font-size: 12px; color: #d1d5db; margin-top: 8px;">{{ student.first_name }} {{ student.last_name }}</div>
+        <div style="font-size: 12px; color: #d1d5db; margin-top: 5px;">{{ student.first_name }} {{ student.last_name }}</div>
     </div>
     <nav>
         <a href="{% url 'student_dashboard' %}" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
@@ -39,7 +42,7 @@
 </div>
 <div class="main-content">
     <div class="top-bar">
-        <span style="color: #6b7280; font-size: 13px;">{{ student.grade }} | Stream {{ student.stream }}</span>
+        <span style="color: #6b7280; font-size: 13px;">Grade {{ student.grade }} | Stream {{ student.stream }}</span>
         <a href="{% url 'student_logout' %}" style="color: #991b1b;">LOGOUT</a>
     </div>
     <div class="content-body">

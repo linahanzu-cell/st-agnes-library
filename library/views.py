@@ -6,6 +6,7 @@ from .models import Student, Teacher, Book, BookCopy, Loan, Reservation
 from django.db.models import Sum, Q
 from django.contrib import messages
 from django.utils import timezone
+from django.urls import reverse
 from functools import wraps
 from datetime import date, datetime
 import pandas as pd
@@ -50,7 +51,6 @@ def admin_logout(request):
 # ============================================================
 # ADMIN DASHBOARD
 # ============================================================
-
 @login_required
 def home(request):
     active_loans = Loan.objects.filter(date_returned__isnull=True)
@@ -71,11 +71,20 @@ def home(request):
     except:
         available = 0
 
-    # ✅ FIX: days_overdue is a @property on the model — never assign to it
+    # ✅ FIX: Include BOTH active overdue AND returned-but-unpaid loans
     overdue_loans = []
     for loan in active_loans:
         if loan.student and loan.calculate_fine() > 0:
             overdue_loans.append(loan)
+
+    returned_unpaid_loans = Loan.objects.filter(
+        student__isnull=False,
+        date_returned__isnull=False,
+        fine_amount__gt=0,
+        fine_paid=False,
+    ).select_related('student', 'book')
+    for loan in returned_unpaid_loans:
+        overdue_loans.append(loan)
 
     pending_reservations = Reservation.objects.filter(status='pending').count()
 
@@ -132,6 +141,10 @@ def students_list(request):
         stream = request.POST.get('stream', '').strip()
         if not all([first_name, last_name, admission_number, grade, stream]):
             messages.error(request, "All fields are required.")
+        elif not first_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ First name must contain letters only.")
+        elif not last_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ Last name must contain letters only.")
         elif Student.objects.filter(admission_number=admission_number).exists():
             messages.error(request, f"Admission number {admission_number} already exists.")
         else:
@@ -150,13 +163,19 @@ def edit_student(request, student_id):
     if request.method == 'POST':
         student.first_name = request.POST.get('first_name', '').strip()
         student.last_name = request.POST.get('last_name', '').strip()
+        if not student.first_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ First name must contain letters only.")
+            return render(request, 'dashboard/edit_student.html', {'student': student})
+        if not student.last_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ Last name must contain letters only.")
+            return render(request, 'dashboard/edit_student.html', {'student': student})
         student.admission_number = request.POST.get('admission_number', '').strip()
         student.grade = request.POST.get('grade', '').strip()
         student.stream = request.POST.get('stream', '').strip()
         if request.POST.get('reset_password'):
             student.is_first_login = True
             student.password = ''
-            messages.info(request, f"{student.first_name}'s password reset. They will set a new one on next login.")
+            messages.info(request, f"{student.first_name}'s password reset.")
         student.save()
         messages.success(request, f"Student {student.first_name} {student.last_name} updated successfully!")
         return redirect('students_list')
@@ -191,37 +210,76 @@ def teachers_list(request):
         teacher_id = request.POST.get('teacher_id', '').strip()
         email = request.POST.get('email', '').strip()
         phone_number = request.POST.get('phone_number', '').strip()
+        subject1 = request.POST.get('subject1', '').strip()
+        subject2 = request.POST.get('subject2', '').strip()
+
         if not all([first_name, last_name, teacher_id, email, phone_number]):
             messages.error(request, "All fields are required.")
+        elif not first_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ First name must contain letters only.")
+        elif not last_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ Last name must contain letters only.")
+        elif not phone_number.isdigit() or len(phone_number) != 10:
+            messages.error(request, "❌ Phone number must be exactly 10 digits.")
+        elif not email.endswith('.com'):
+            messages.error(request, "❌ Email must end with .com")
         elif Teacher.objects.filter(teacher_id=teacher_id).exists():
             messages.error(request, f"Teacher ID {teacher_id} already exists.")
         else:
             Teacher.objects.create(
-                first_name=first_name, last_name=last_name,
-                teacher_id=teacher_id, email=email, phone_number=phone_number,
+                first_name=first_name,
+                last_name=last_name,
+                teacher_id=teacher_id,
+                email=email,
+                phone_number=phone_number,
+                subject1=subject1,
+                subject2=subject2,
             )
             messages.success(request, f"Teacher {first_name} {last_name} added successfully!")
-        return redirect('teachers_list')
+            return redirect('teachers_list')
+
     teachers = Teacher.objects.all().order_by('last_name')
     return render(request, 'dashboard/teachers_list.html', {'teachers': teachers})
 
 @login_required
 def edit_teacher(request, teacher_id):
+    from .models import SUBJECT_CHOICES
     teacher = get_object_or_404(Teacher, id=teacher_id)
     if request.method == 'POST':
         teacher.first_name = request.POST.get('first_name', '').strip()
         teacher.last_name = request.POST.get('last_name', '').strip()
+        if not teacher.first_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ First name must contain letters only.")
+            return render(request, 'dashboard/edit_teacher.html', {'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        if not teacher.last_name.replace(' ', '').isalpha():
+            messages.error(request, "❌ Last name must contain letters only.")
+            return render(request, 'dashboard/edit_teacher.html', {'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
         teacher.teacher_id = request.POST.get('teacher_id', '').strip()
         teacher.email = request.POST.get('email', '').strip()
         teacher.phone_number = request.POST.get('phone_number', '').strip()
+        if not teacher.phone_number.isdigit() or len(teacher.phone_number) != 10:
+            messages.error(request, "❌ Phone number must be exactly 10 digits.")
+            return render(request, 'dashboard/edit_teacher.html', {'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        if not teacher.email.endswith('.com'):
+            messages.error(request, "❌ Email must end with .com")
+            return render(request, 'dashboard/edit_teacher.html', {'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        # ✅ Save subjects
+        teacher.subject1 = request.POST.get('subject1', '').strip()
+        teacher.subject2 = request.POST.get('subject2', '').strip()
+        # ✅ Auto-set Literature if English teacher
+        if teacher.subject1 == 'English' and not teacher.subject2:
+            teacher.subject2 = 'Literature in English'
         if request.POST.get('reset_password'):
             teacher.is_first_login = True
             teacher.password = ''
-            messages.info(request, f"{teacher.first_name}'s password reset. They will set a new one on next login.")
+            messages.info(request, f"{teacher.first_name}'s password reset.")
         teacher.save()
         messages.success(request, f"Teacher {teacher.first_name} {teacher.last_name} updated successfully!")
         return redirect('teachers_list')
-    return render(request, 'dashboard/edit_teacher.html', {'teacher': teacher})
+    return render(request, 'dashboard/edit_teacher.html', {
+        'teacher': teacher,
+        'subject_choices': SUBJECT_CHOICES,
+    })
 
 @login_required
 def delete_teacher(request, teacher_id):
@@ -257,10 +315,7 @@ def books_list(request):
         if not all([title, author, subject, category, publisher, grade]):
             messages.error(request, "All fields are required.")
         else:
-            existing = Book.objects.filter(
-                title__iexact=title,
-                grade__iexact=grade
-            ).first()
+            existing = Book.objects.filter(title__iexact=title, grade__iexact=grade).first()
             if existing:
                 existing.total_copies = int(total_copies)
                 existing.author = author
@@ -268,7 +323,7 @@ def books_list(request):
                 existing.category = category
                 existing.publisher = publisher
                 existing.save()
-                messages.success(request, f"Book '{title}' already exists — updated to {total_copies} copies!")
+                messages.success(request, f"Book '{title}' updated to {total_copies} copies!")
             else:
                 Book.objects.create(
                     title=title, author=author, subject=subject, category=category,
@@ -298,7 +353,7 @@ def edit_book(request, book_id):
         book.grade = request.POST.get('grade', '').strip()
         book.total_copies = int(request.POST.get('total_copies', '1'))
         book.save()
-        messages.success(request, f"Book updated successfully!")
+        messages.success(request, "Book updated successfully!")
         return redirect('books_list')
     return render(request, 'dashboard/edit_book.html', {'book': book})
 
@@ -323,10 +378,8 @@ def upload_excel(request):
             df = pd.read_excel(file)
             df.columns = df.columns.str.strip().str.lower()
             df.rename(columns={
-                'book name': 'title',
-                'book_name': 'title',
-                'quantity': 'total_copies',
-                'qty': 'total_copies',
+                'book name': 'title', 'book_name': 'title',
+                'quantity': 'total_copies', 'qty': 'total_copies',
             }, inplace=True)
 
             if 'admission_number' in df.columns:
@@ -337,8 +390,7 @@ def upload_excel(request):
                     return redirect('students_list')
                 count = 0
                 for _, row in df.iterrows():
-                    if pd.isna(row['admission_number']):
-                        continue
+                    if pd.isna(row['admission_number']): continue
                     Student.objects.update_or_create(
                         admission_number=str(row['admission_number']).strip(),
                         defaults={
@@ -360,8 +412,7 @@ def upload_excel(request):
                     return redirect('teachers_list')
                 count = 0
                 for _, row in df.iterrows():
-                    if pd.isna(row['teacher_id']):
-                        continue
+                    if pd.isna(row['teacher_id']): continue
                     Teacher.objects.update_or_create(
                         teacher_id=str(row['teacher_id']).strip(),
                         defaults={
@@ -383,10 +434,8 @@ def upload_excel(request):
                     return redirect('books_list')
                 count = 0
                 for _, row in df.iterrows():
-                    if pd.isna(row['title']):
-                        continue
-                    raw_grade = str(row['grade']).strip()
-                    raw_grade = raw_grade.replace('Grade ', '').replace('grade ', '').strip()
+                    if pd.isna(row['title']): continue
+                    raw_grade = str(row['grade']).strip().replace('Grade ', '').replace('grade ', '').strip()
                     try:
                         raw_grade = str(int(float(raw_grade)))
                     except:
@@ -396,8 +445,7 @@ def upload_excel(request):
                     except:
                         copies = 1
                     Book.objects.update_or_create(
-                        title=str(row['title']).strip(),
-                        grade=raw_grade,
+                        title=str(row['title']).strip(), grade=raw_grade,
                         defaults={
                             'author': str(row['author']).strip(),
                             'subject': str(row['subject']).strip(),
@@ -435,9 +483,7 @@ def reports_view(request, report_type):
         context['book_data'] = book_data
 
     elif report_type == 'issued_books':
-        loans = Loan.objects.all().select_related(
-            'book', 'student', 'teacher'
-        ).order_by('-date_borrowed')
+        loans = Loan.objects.all().select_related('book', 'student', 'teacher').order_by('-date_borrowed')
         search_book = request.GET.get('search_book', '').strip()
         borrower_type = request.GET.get('borrower_type', '').strip()
         grade_filter = request.GET.get('grade', '').strip()
@@ -451,9 +497,7 @@ def reports_view(request, report_type):
         elif borrower_type == 'teacher':
             loans = loans.filter(teacher__isnull=False, student__isnull=True)
         if grade_filter:
-            loans = loans.filter(
-                Q(student__grade=grade_filter) | Q(book__grade=grade_filter)
-            )
+            loans = loans.filter(Q(student__grade=grade_filter) | Q(book__grade=grade_filter))
         if start_date:
             loans = loans.filter(date_borrowed__gte=start_date)
         if end_date:
@@ -473,13 +517,11 @@ def reports_view(request, report_type):
 
     elif report_type == 'student_report':
         context['loans'] = Loan.objects.filter(
-            student__isnull=False
-        ).select_related('student', 'book').order_by('-date_borrowed')
+            student__isnull=False).select_related('student', 'book').order_by('-date_borrowed')
 
     elif report_type == 'teacher_report':
         context['loans'] = Loan.objects.filter(
-            teacher__isnull=False
-        ).select_related('teacher', 'book').order_by('-date_borrowed')
+            teacher__isnull=False).select_related('teacher', 'book').order_by('-date_borrowed')
 
     elif report_type == 'fines_report':
         grade_filter = request.GET.get('grade', '').strip()
@@ -489,21 +531,16 @@ def reports_view(request, report_type):
         paid_filter = request.GET.get('paid_status', '').strip()
 
         active_loans = Loan.objects.filter(
-            student__isnull=False,
-            date_returned__isnull=True,
-            fine_paid=False,
+            student__isnull=False, date_returned__isnull=True, fine_paid=False,
         ).select_related('student', 'book').order_by('student__last_name')
 
         returned_unpaid = Loan.objects.filter(
-            student__isnull=False,
-            date_returned__isnull=False,
-            fine_amount__gt=0,
-            fine_paid=False,
+            student__isnull=False, date_returned__isnull=False,
+            fine_amount__gt=0, fine_paid=False,
         ).select_related('student', 'book').order_by('student__last_name')
 
         paid_fines = Loan.objects.filter(
-            student__isnull=False,
-            fine_paid=True,
+            student__isnull=False, fine_paid=True,
         ).select_related('student', 'book').order_by('-fine_paid_date')
 
         if grade_filter:
@@ -528,17 +565,17 @@ def reports_view(request, report_type):
             fine = loan.calculate_fine()
             if fine > 0:
                 active_fines_data.append({
-                    'loan': loan,
-                    'fine': fine,
-                    'days_overdue': loan.days_overdue,
-                    'status': 'Active Loan',
+                    'loan': loan, 'fine': fine,
+                    'days_overdue': loan.days_overdue, 'status': 'Active Loan',
                 })
         for loan in returned_unpaid:
+            if loan.date_returned and loan.date_due and loan.date_returned > loan.date_due:
+                actual_days = (loan.date_returned - loan.date_due).days
+            else:
+                actual_days = max(int(loan.fine_amount // 50), 0) if loan.fine_amount else 0
             active_fines_data.append({
-                'loan': loan,
-                'fine': loan.fine_amount,
-                'days_overdue': 0,
-                'status': 'Book Returned',
+                'loan': loan, 'fine': loan.fine_amount,
+                'days_overdue': actual_days, 'status': 'Book Returned',
             })
 
         total_unpaid = sum(item['fine'] for item in active_fines_data)
@@ -570,10 +607,7 @@ def mark_fine_paid(request, loan_id):
         loan.fine_paid_date = timezone.now().date()
         loan.save()
         name = f"{loan.student.first_name} {loan.student.last_name}"
-        messages.success(
-            request,
-            f"Fine of KSH {loan.fine_amount} for {name} marked as PAID! ✅"
-        )
+        messages.success(request, f"Fine of KSH {loan.fine_amount} for {name} marked as PAID! ✅")
     return redirect(request.META.get('HTTP_REFERER', '/reports/fines_report/'))
 
 @login_required
@@ -602,7 +636,6 @@ def loans_list(request):
     return render(request, 'dashboard/loans_list.html', {
         'active_loans': active_loans,
         'returned_loans': returned_loans,
-        'today': date.today(),
     })
 
 @login_required
@@ -619,19 +652,14 @@ def issue_book(request):
             messages.error(request, "Book and due date are required.")
             return redirect('issue_book')
 
-        # ✅ FIX: Validate due date is not before today
         try:
             date_due_parsed = datetime.strptime(date_due, '%Y-%m-%d').date()
         except ValueError:
-            messages.error(request, "❌ Invalid date format. Please use the date picker.")
+            messages.error(request, "❌ Invalid date format.")
             return redirect('issue_book')
 
         if date_due_parsed < date.today():
-            messages.error(
-                request,
-                f"❌ Due date ({date_due_parsed}) cannot be before today ({date.today()})! "
-                f"Please select today or a future date."
-            )
+            messages.error(request, f"❌ Due date cannot be before today!")
             return redirect('issue_book')
 
         book = get_object_or_404(Book, id=book_id)
@@ -644,9 +672,7 @@ def issue_book(request):
 
         if borrower_type == 'student' and student_id:
             student = get_object_or_404(Student, id=student_id)
-            if Loan.objects.filter(
-                book=book, student=student, date_returned__isnull=True
-            ).exists():
+            if Loan.objects.filter(book=book, student=student, date_returned__isnull=True).exists():
                 messages.error(request, f"{student.first_name} already has this book.")
                 return redirect('issue_book')
             Loan.objects.create(book=book, copy=copy, student=student, date_due=date_due)
@@ -657,9 +683,7 @@ def issue_book(request):
             messages.success(request, f"'{book.title}' {copy_info} issued to {student.first_name} {student.last_name}!")
         elif borrower_type == 'teacher' and teacher_id:
             teacher = get_object_or_404(Teacher, id=teacher_id)
-            if Loan.objects.filter(
-                book=book, teacher=teacher, date_returned__isnull=True
-            ).exists():
+            if Loan.objects.filter(book=book, teacher=teacher, date_returned__isnull=True).exists():
                 messages.error(request, f"{teacher.first_name} already has this book.")
                 return redirect('issue_book')
             Loan.objects.create(book=book, copy=copy, teacher=teacher, date_due=date_due)
@@ -677,14 +701,24 @@ def issue_book(request):
     students = Student.objects.filter(status='Active').order_by('last_name')
     teachers = Teacher.objects.filter(status='Active').order_by('last_name')
     copies = BookCopy.objects.filter(
-        is_available=True
-    ).select_related('book').order_by('book__title', 'copy_number')
+        is_available=True).select_related('book').order_by('book__title', 'copy_number')
+
+    # ✅ Pre-fill from reservation approval
+    prefill_student_id = request.GET.get('student_id', '')
+    prefill_teacher_id = request.GET.get('teacher_id', '')
+    prefill_book_id = request.GET.get('book_id', '')
+    prefill_borrower_type = request.GET.get('borrower_type', 'student')
+
     return render(request, 'dashboard/issue_book.html', {
         'books': books,
         'students': students,
         'teachers': teachers,
         'copies': copies,
         'today': date.today(),
+        'prefill_student_id': prefill_student_id,
+        'prefill_teacher_id': prefill_teacher_id,
+        'prefill_book_id': prefill_book_id,
+        'prefill_borrower_type': prefill_borrower_type,
     })
 
 @login_required
@@ -695,16 +729,11 @@ def edit_loan(request, loan_id):
         try:
             new_due_date = datetime.strptime(new_due_date_str, '%Y-%m-%d').date()
         except ValueError:
-            messages.error(request, "❌ Invalid date format. Please use the date picker.")
+            messages.error(request, "❌ Invalid date format.")
             return render(request, 'dashboard/edit_loan.html', {'loan': loan})
-
         if new_due_date < loan.date_borrowed:
-            messages.error(
-                request,
-                f"❌ Due date ({new_due_date}) cannot be before the borrowing date ({loan.date_borrowed})!"
-            )
+            messages.error(request, f"❌ Due date cannot be before borrowing date!")
             return render(request, 'dashboard/edit_loan.html', {'loan': loan})
-
         loan.date_due = new_due_date
         loan.save()
         messages.success(request, "Loan due date updated successfully!")
@@ -715,51 +744,23 @@ def edit_loan(request, loan_id):
 def return_book(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     if request.method == 'POST':
-        return_date_str = request.POST.get('return_date', '').strip()
-
-        if return_date_str:
-            try:
-                return_date = datetime.strptime(return_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                messages.error(request, "❌ Invalid date format. Please use the date picker.")
-                return redirect('loans_list')
-
-            if return_date < loan.date_borrowed:
-                messages.error(
-                    request,
-                    f"❌ Return date ({return_date}) cannot be before the borrowing date ({loan.date_borrowed})! Please enter a correct date."
-                )
-                return redirect('loans_list')
-
-            if return_date > timezone.now().date():
-                messages.error(
-                    request,
-                    f"❌ Return date ({return_date}) cannot be in the future!"
-                )
-                return redirect('loans_list')
-        else:
-            return_date = timezone.now().date()
-
+        return_date = timezone.now().date()
         fine = loan.calculate_fine()
         loan.fine_amount = fine
         loan.date_returned = return_date
         loan.save()
-
         try:
             if loan.copy:
                 loan.copy.is_available = True
                 loan.copy.save()
         except:
             pass
-
         name = f"{loan.student.first_name} {loan.student.last_name}" if loan.student \
             else f"{loan.teacher.first_name} {loan.teacher.last_name}"
-
         if fine > 0:
             messages.warning(request, f"'{loan.book.title}' returned by {name}. Fine: KSH {fine} — Please collect payment.")
         else:
             messages.success(request, f"'{loan.book.title}' returned by {name} successfully!")
-
     return redirect('loans_list')
 
 @login_required
@@ -769,6 +770,153 @@ def delete_loan(request, loan_id):
         loan.delete()
         messages.success(request, "Loan record deleted successfully.")
     return redirect('loans_list')
+
+# ============================================================
+# BULK ISSUE BOOKS - ADMIN
+# ============================================================
+
+@login_required
+def bulk_issue_book(request):
+    books = Book.objects.all().order_by('book_id')
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        book_id = request.POST.get('book_id', '')
+        grade = request.POST.get('grade', '')
+        stream = request.POST.get('stream', '')
+        date_due = request.POST.get('date_due', '')
+
+        # ── Validate inputs ──────────────────────────────────
+        if not all([book_id, grade, stream, date_due]):
+            messages.error(request, "❌ All fields are required.")
+            return render(request, 'dashboard/bulk_issue.html', {
+                'books': books, 'today': date.today()
+            })
+
+        try:
+            date_due_parsed = datetime.strptime(date_due, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "❌ Invalid date format.")
+            return render(request, 'dashboard/bulk_issue.html', {
+                'books': books, 'today': date.today()
+            })
+
+        if date_due_parsed < date.today():
+            messages.error(request, "❌ Due date cannot be before today!")
+            return render(request, 'dashboard/bulk_issue.html', {
+                'books': books, 'today': date.today()
+            })
+
+        book = get_object_or_404(Book, id=book_id)
+
+        # ── Get students sorted by admission number (smallest first) ──
+        students = Student.objects.filter(
+            grade=grade, stream__iexact=stream, status='Active'
+        ).order_by('admission_number')
+
+        if not students.exists():
+            messages.error(request, f"❌ No active students found in Grade {grade} Stream {stream.upper()}.")
+            return render(request, 'dashboard/bulk_issue.html', {
+                'books': books, 'today': date.today()
+            })
+
+        # ── Get available copies ──────────────────────────────
+        available_copies = list(
+            BookCopy.objects.filter(book=book, is_available=True).order_by('copy_number')
+        )
+
+        # ── Build assignment ──────────────────────────────────
+        # Skip students who already have the book
+        # Assign copies in order; if copies run out, add to no_copy list
+        will_issue = []       # {student, copy}
+        already_has = []      # students who already have this book
+        no_copy = []          # students who need book but no copy left
+
+        copy_index = 0
+        for student in students:
+            has_book = Loan.objects.filter(
+                book=book, student=student, date_returned__isnull=True
+            ).exists()
+
+            if has_book:
+                already_has.append(student)
+                continue
+
+            if copy_index < len(available_copies):
+                will_issue.append({
+                    'student': student,
+                    'copy': available_copies[copy_index],
+                })
+                copy_index += 1
+            else:
+                no_copy.append(student)
+
+        # ── PREVIEW: show before confirming ──────────────────
+        if action == 'preview':
+            return render(request, 'dashboard/bulk_issue.html', {
+                'books': books,
+                'today': date.today(),
+                'preview': True,
+                'book': book,
+                'grade': grade,
+                'stream': stream,
+                'date_due': date_due,
+                'will_issue': will_issue,
+                'already_has': already_has,
+                'no_copy': no_copy,
+                'total_students': students.count(),
+                'copies_available': len(available_copies),
+            })
+
+        # ── CONFIRM: actually create the loans ───────────────
+        elif action == 'confirm':
+            issued_count = 0
+            failed = 0
+
+            for item in will_issue:
+                student = item['student']
+                copy = item['copy']
+
+                # Re-check copy is still available (safety check)
+                copy.refresh_from_db()
+                if not copy.is_available:
+                    failed += 1
+                    continue
+
+                # Double-check student doesn't already have it
+                if Loan.objects.filter(
+                    book=book, student=student, date_returned__isnull=True
+                ).exists():
+                    failed += 1
+                    continue
+
+                Loan.objects.create(
+                    book=book,
+                    copy=copy,
+                    student=student,
+                    date_due=date_due,
+                )
+                copy.is_available = False
+                copy.save()
+                issued_count += 1
+
+            # Build success message
+            msg_parts = [f"✅ '{book.title}' issued to {issued_count} students in Grade {grade}{stream.upper()}."]
+            if already_has:
+                msg_parts.append(f"{len(already_has)} skipped (already had the book).")
+            if no_copy:
+                msg_parts.append(f"⚠️ {len(no_copy)} students could not get a copy — restock and run again.")
+            if failed:
+                msg_parts.append(f"{failed} failed (copy taken by another process).")
+
+            messages.success(request, " ".join(msg_parts))
+            return redirect('loans_list')
+
+    # ── GET: show empty form ──────────────────────────────────
+    return render(request, 'dashboard/bulk_issue.html', {
+        'books': books,
+        'today': date.today(),
+    })
 
 # ============================================================
 # RESERVATIONS - ADMIN
@@ -783,9 +931,7 @@ def reservations_list(request):
     rejected = Reservation.objects.filter(status='rejected').select_related(
         'book', 'student', 'teacher').order_by('-date_reserved')
     return render(request, 'dashboard/reservations.html', {
-        'pending': pending,
-        'approved': approved,
-        'rejected': rejected,
+        'pending': pending, 'approved': approved, 'rejected': rejected,
     })
 
 @login_required
@@ -794,8 +940,14 @@ def approve_reservation(request, reservation_id):
     reservation.status = 'approved'
     reservation.save()
     person = reservation.student or reservation.teacher
-    messages.success(request, f"Reservation for '{reservation.book.title}' by {person} approved!")
-    return redirect('reservations_list')
+    messages.success(request, f"Reservation approved! Now issue the book to {person}.")
+
+    # ✅ Redirect to issue book with details pre-filled
+    if reservation.student:
+        url = reverse('issue_book') + f'?student_id={reservation.student.id}&book_id={reservation.book.id}&borrower_type=student'
+    else:
+        url = reverse('issue_book') + f'?teacher_id={reservation.teacher.id}&book_id={reservation.book.id}&borrower_type=teacher'
+    return redirect(url)
 
 @login_required
 def reject_reservation(request, reservation_id):
@@ -823,11 +975,9 @@ def student_login(request):
                 request.session['student_id'] = student.id
                 return redirect('student_dashboard')
             else:
-                return render(request, 'student/login.html',
-                    {'error': 'Wrong password. Try again.'})
+                return render(request, 'student/login.html', {'error': 'Wrong password. Try again.'})
         except Student.DoesNotExist:
-            return render(request, 'student/login.html',
-                {'error': 'Admission number not found.'})
+            return render(request, 'student/login.html', {'error': 'Admission number not found.'})
     return render(request, 'student/login.html')
 
 def student_set_password(request):
@@ -839,13 +989,9 @@ def student_set_password(request):
         password = request.POST.get('password', '').strip()
         confirm = request.POST.get('confirm_password', '').strip()
         if len(password) < 6:
-            return render(request, 'student/set_password.html', {
-                'error': 'Password must be at least 6 characters.',
-                'student': student})
+            return render(request, 'student/set_password.html', {'error': 'Password must be at least 6 characters.', 'student': student})
         if password != confirm:
-            return render(request, 'student/set_password.html', {
-                'error': 'Passwords do not match.',
-                'student': student})
+            return render(request, 'student/set_password.html', {'error': 'Passwords do not match.', 'student': student})
         student.set_password(password)
         student.is_first_login = False
         student.save()
@@ -879,51 +1025,60 @@ def student_books(request):
     query = request.GET.get('q', '')
     books = Book.objects.all()
     if query:
-        books = books.filter(
-            Q(title__icontains=query) |
-            Q(author__icontains=query) |
-            Q(subject__icontains=query))
+        books = books.filter(Q(title__icontains=query) | Q(author__icontains=query) | Q(subject__icontains=query))
     book_data = []
     for book in books:
         try:
             available = BookCopy.objects.filter(book=book, is_available=True).count()
         except:
-            available = book.total_copies - Loan.objects.filter(
-                book=book, date_returned__isnull=True).count()
-        already_reserved = Reservation.objects.filter(
-            book=book, student=student, status='pending').exists()
-        already_borrowed = Loan.objects.filter(
-            book=book, student=student, date_returned__isnull=True).exists()
+            available = book.total_copies - Loan.objects.filter(book=book, date_returned__isnull=True).count()
+        already_reserved = Reservation.objects.filter(book=book, student=student, status='pending').exists()
+        already_borrowed = Loan.objects.filter(book=book, student=student, date_returned__isnull=True).exists()
         book_data.append({
-            'book': book,
-            'available': available,
-            'already_reserved': already_reserved,
-            'already_borrowed': already_borrowed,
+            'book': book, 'available': available,
+            'already_reserved': already_reserved, 'already_borrowed': already_borrowed,
         })
-    return render(request, 'student/books.html', {
-        'book_data': book_data, 'query': query, 'student': student})
+    return render(request, 'student/books.html', {'book_data': book_data, 'query': query, 'student': student})
 
 @student_login_required
 def student_history(request):
     student = get_object_or_404(Student, id=request.session['student_id'])
-    loans = Loan.objects.filter(
-        student=student).select_related('book').order_by('-date_borrowed')
+    loans = Loan.objects.filter(student=student).select_related('book').order_by('-date_borrowed')
     return render(request, 'student/history.html', {'loans': loans, 'student': student})
 
 @student_login_required
 def student_fines(request):
     student = get_object_or_404(Student, id=request.session['student_id'])
+
+    # ✅ Active loans with overdue fines
     active_loans = Loan.objects.filter(student=student, date_returned__isnull=True)
+    # ✅ Returned but unpaid fines
+    returned_unpaid = Loan.objects.filter(
+        student=student, date_returned__isnull=False,
+        fine_amount__gt=0, fine_paid=False,
+    )
+
     fine_data = []
     total = 0
+
     for loan in active_loans:
         fine = loan.calculate_fine()
         if fine > 0:
             days = (timezone.now().date() - loan.date_due).days
-            fine_data.append({'loan': loan, 'fine': fine, 'days': days})
+            fine_data.append({'loan': loan, 'fine': fine, 'days': days, 'status': 'Active'})
             total += fine
+
+    for loan in returned_unpaid:
+        if loan.date_returned and loan.date_due and loan.date_returned > loan.date_due:
+            days = (loan.date_returned - loan.date_due).days
+        else:
+            days = max(int(loan.fine_amount // 50), 0) if loan.fine_amount else 0
+        fine_data.append({'loan': loan, 'fine': loan.fine_amount, 'days': days, 'status': 'Returned Late'})
+        total += loan.fine_amount
+
     return render(request, 'student/fines.html', {
-        'fine_data': fine_data, 'total': total, 'student': student})
+        'fine_data': fine_data, 'total': total, 'student': student
+    })
 
 @student_login_required
 def student_reserve(request, book_id):
@@ -933,7 +1088,7 @@ def student_reserve(request, book_id):
         messages.warning(request, f"You already have a pending reservation for '{book.title}'.")
     else:
         Reservation.objects.create(book=book, student=student)
-        messages.success(request, f"Reservation for '{book.title}' submitted! The librarian will approve it shortly.")
+        messages.success(request, f"Reservation for '{book.title}' submitted!")
     return redirect('student_books')
 
 @student_login_required
@@ -942,17 +1097,17 @@ def student_profile(request):
     if request.method == 'POST':
         student.first_name = request.POST.get('first_name', student.first_name).strip()
         student.last_name = request.POST.get('last_name', student.last_name).strip()
+        if not student.first_name.replace(' ', '').isalpha():
+            return render(request, 'student/profile.html', {'error': '❌ First name must contain letters only.', 'student': student})
+        if not student.last_name.replace(' ', '').isalpha():
+            return render(request, 'student/profile.html', {'error': '❌ Last name must contain letters only.', 'student': student})
         new_password = request.POST.get('new_password', '').strip()
         confirm_password = request.POST.get('confirm_password', '').strip()
         if new_password:
             if len(new_password) < 6:
-                return render(request, 'student/profile.html', {
-                    'error': 'Password must be at least 6 characters.',
-                    'student': student})
+                return render(request, 'student/profile.html', {'error': 'Password must be at least 6 characters.', 'student': student})
             if new_password != confirm_password:
-                return render(request, 'student/profile.html', {
-                    'error': 'Passwords do not match.',
-                    'student': student})
+                return render(request, 'student/profile.html', {'error': 'Passwords do not match.', 'student': student})
             student.set_password(new_password)
             messages.success(request, "Password updated successfully!")
         else:
@@ -964,16 +1119,20 @@ def student_profile(request):
 @student_login_required
 def student_report(request):
     student = get_object_or_404(Student, id=request.session['student_id'])
-    loans = Loan.objects.filter(
-        student=student).select_related('book').order_by('-date_borrowed')
+    loans = Loan.objects.filter(student=student).select_related('book').order_by('-date_borrowed')
     total_fines = sum(
         loan.fine_amount if loan.date_returned else loan.calculate_fine()
         for loan in loans
     )
+    # ✅ Fix counts
+    returned_count = loans.filter(date_returned__isnull=False).count()
+    active_count = loans.filter(date_returned__isnull=True).count()
     return render(request, 'student/report.html', {
         'student': student,
         'loans': loans,
         'total_fines': total_fines,
+        'returned_count': returned_count,
+        'active_count': active_count,
     })
 
 # ============================================================
@@ -993,11 +1152,9 @@ def teacher_login(request):
                 request.session['teacher_portal_id'] = teacher.id
                 return redirect('teacher_dashboard')
             else:
-                return render(request, 'teacher/login.html',
-                    {'error': 'Wrong password. Try again.'})
+                return render(request, 'teacher/login.html', {'error': 'Wrong password. Try again.'})
         except Teacher.DoesNotExist:
-            return render(request, 'teacher/login.html',
-                {'error': 'Teacher ID not found.'})
+            return render(request, 'teacher/login.html', {'error': 'Teacher ID not found.'})
     return render(request, 'teacher/login.html')
 
 def teacher_set_password(request):
@@ -1009,13 +1166,9 @@ def teacher_set_password(request):
         password = request.POST.get('password', '').strip()
         confirm = request.POST.get('confirm_password', '').strip()
         if len(password) < 6:
-            return render(request, 'teacher/set_password.html', {
-                'error': 'Password must be at least 6 characters.',
-                'teacher': teacher})
+            return render(request, 'teacher/set_password.html', {'error': 'Password must be at least 6 characters.', 'teacher': teacher})
         if password != confirm:
-            return render(request, 'teacher/set_password.html', {
-                'error': 'Passwords do not match.',
-                'teacher': teacher})
+            return render(request, 'teacher/set_password.html', {'error': 'Passwords do not match.', 'teacher': teacher})
         teacher.set_password(password)
         teacher.is_first_login = False
         teacher.save()
@@ -1033,13 +1186,10 @@ def teacher_logout(request):
 def teacher_dashboard(request):
     teacher = get_object_or_404(Teacher, id=request.session['teacher_portal_id'])
     active_loans = Loan.objects.filter(teacher=teacher, date_returned__isnull=True)
-    reservations = Reservation.objects.filter(
-        teacher=teacher).order_by('-date_reserved')[:5]
+    reservations = Reservation.objects.filter(teacher=teacher).order_by('-date_reserved')[:5]
     return render(request, 'teacher/dashboard.html', {
-        'teacher': teacher,
-        'active_loans': active_loans,
-        'reservations': reservations,
-        'books_borrowed': active_loans.count(),
+        'teacher': teacher, 'active_loans': active_loans,
+        'reservations': reservations, 'books_borrowed': active_loans.count(),
     })
 
 @teacher_login_required
@@ -1048,32 +1198,21 @@ def teacher_books(request):
     query = request.GET.get('q', '')
     books = Book.objects.all()
     if query:
-        books = books.filter(
-            Q(title__icontains=query) |
-            Q(author__icontains=query) |
-            Q(subject__icontains=query))
+        books = books.filter(Q(title__icontains=query) | Q(author__icontains=query) | Q(subject__icontains=query))
     book_data = []
     for book in books:
         try:
             available = BookCopy.objects.filter(book=book, is_available=True).count()
         except:
-            available = book.total_copies - Loan.objects.filter(
-                book=book, date_returned__isnull=True).count()
-        already_reserved = Reservation.objects.filter(
-            book=book, teacher=teacher, status='pending').exists()
-        book_data.append({
-            'book': book,
-            'available': available,
-            'already_reserved': already_reserved,
-        })
-    return render(request, 'teacher/books.html', {
-        'book_data': book_data, 'query': query, 'teacher': teacher})
+            available = book.total_copies - Loan.objects.filter(book=book, date_returned__isnull=True).count()
+        already_reserved = Reservation.objects.filter(book=book, teacher=teacher, status='pending').exists()
+        book_data.append({'book': book, 'available': available, 'already_reserved': already_reserved})
+    return render(request, 'teacher/books.html', {'book_data': book_data, 'query': query, 'teacher': teacher})
 
 @teacher_login_required
 def teacher_history(request):
     teacher = get_object_or_404(Teacher, id=request.session['teacher_portal_id'])
-    loans = Loan.objects.filter(
-        teacher=teacher).select_related('book').order_by('-date_borrowed')
+    loans = Loan.objects.filter(teacher=teacher).select_related('book').order_by('-date_borrowed')
     return render(request, 'teacher/history.html', {'loans': loans, 'teacher': teacher})
 
 @teacher_login_required
@@ -1084,46 +1223,69 @@ def teacher_reserve(request, book_id):
         messages.warning(request, f"You already have a pending reservation for '{book.title}'.")
     else:
         Reservation.objects.create(book=book, teacher=teacher)
-        messages.success(request, f"Reservation for '{book.title}' submitted! The librarian will approve it shortly.")
+        messages.success(request, f"Reservation for '{book.title}' submitted!")
     return redirect('teacher_books')
 
 @teacher_login_required
 def teacher_profile(request):
+    from .models import SUBJECT_CHOICES
     teacher = get_object_or_404(Teacher, id=request.session['teacher_portal_id'])
     if request.method == 'POST':
         teacher.first_name = request.POST.get('first_name', teacher.first_name).strip()
         teacher.last_name = request.POST.get('last_name', teacher.last_name).strip()
+        if not teacher.first_name.replace(' ', '').isalpha():
+            return render(request, 'teacher/profile.html', {
+                'error': '❌ First name must contain letters only.',
+                'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        if not teacher.last_name.replace(' ', '').isalpha():
+            return render(request, 'teacher/profile.html', {
+                'error': '❌ Last name must contain letters only.',
+                'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
         teacher.email = request.POST.get('email', teacher.email).strip()
         teacher.phone_number = request.POST.get('phone_number', teacher.phone_number).strip()
+        if not teacher.phone_number.isdigit() or len(teacher.phone_number) != 10:
+            return render(request, 'teacher/profile.html', {
+                'error': '❌ Phone number must be exactly 10 digits.',
+                'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        if not teacher.email.endswith('.com'):
+            return render(request, 'teacher/profile.html', {
+                'error': '❌ Email must end with .com',
+                'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
+        # ✅ Save subjects
+        teacher.subject1 = request.POST.get('subject1', teacher.subject1).strip()
+        teacher.subject2 = request.POST.get('subject2', teacher.subject2).strip()
+        # ✅ Auto-set Literature if English
+        if teacher.subject1 == 'English' and not teacher.subject2:
+            teacher.subject2 = 'Literature in English'
         new_password = request.POST.get('new_password', '').strip()
         confirm_password = request.POST.get('confirm_password', '').strip()
         if new_password:
             if len(new_password) < 6:
                 return render(request, 'teacher/profile.html', {
                     'error': 'Password must be at least 6 characters.',
-                    'teacher': teacher})
+                    'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
             if new_password != confirm_password:
                 return render(request, 'teacher/profile.html', {
                     'error': 'Passwords do not match.',
-                    'teacher': teacher})
+                    'teacher': teacher, 'subject_choices': SUBJECT_CHOICES})
             teacher.set_password(new_password)
             messages.success(request, "Password updated successfully!")
         else:
             messages.success(request, "Profile updated successfully!")
         teacher.save()
         return redirect('teacher_profile')
-    return render(request, 'teacher/profile.html', {'teacher': teacher})
+    return render(request, 'teacher/profile.html', {
+        'teacher': teacher,
+        'subject_choices': SUBJECT_CHOICES,
+    })
 
 @teacher_login_required
 def teacher_report(request):
     teacher = get_object_or_404(Teacher, id=request.session['teacher_portal_id'])
-    loans = Loan.objects.filter(
-        teacher=teacher).select_related('book').order_by('-date_borrowed')
+    loans = Loan.objects.filter(teacher=teacher).select_related('book').order_by('-date_borrowed')
     active_count = loans.filter(date_returned__isnull=True).count()
     returned_count = loans.filter(date_returned__isnull=False).count()
     return render(request, 'teacher/report.html', {
-        'teacher': teacher,
-        'loans': loans,
-        'active_count': active_count,
-        'returned_count': returned_count,
+        'teacher': teacher, 'loans': loans,
+        'active_count': active_count, 'returned_count': returned_count,
     })
